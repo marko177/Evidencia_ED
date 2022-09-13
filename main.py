@@ -4,7 +4,6 @@ from tabulate import tabulate
 
 
 def imprimir_reporte():
-
     while True:
 
         try:
@@ -52,12 +51,12 @@ def imprimir_reporte():
 
     else:
 
-        print("No hay reservas en esa fecha.")
+        print("No hay reservas en esa fecha.\n")
 
 
-def imprimir_confirmacion(folio, fecha, sala, cliente, evento, horario):
+def imprimir_confirmacion(folio_func, fecha, sala, cliente, evento, horario):
     formato_impresion = {
-        "FOLIO": [folio],
+        "FOLIO": [folio_func],
         "FECHA": [fecha],
         "SALA": [sala],
         "CLIENTE": [cliente.capitalize()],
@@ -74,6 +73,16 @@ def imprimir_confirmacion(folio, fecha, sala, cliente, evento, horario):
     print("")
 
 
+def guardar_reserva(diccionario, folio_func, fecha, sala, cliente, evento, horario):
+    diccionario[folio_func] = {
+        "fecha": fecha,
+        "sala": sala,
+        "horario": horario,
+        "usuario": cliente,
+        "evento": evento,
+    }
+
+
 usuarios = {}
 salas = {}
 reservas = {}
@@ -87,7 +96,7 @@ fecha_hoy = datetime.date.today()
 while True:
 
     opcion = input("""+----------------------------------------+
-|       Ingrese la opcion deseada:       |
+|       Ingrese la opción deseada:       |
 |-------+--------------------------------|
 |   a)  | Alta de usuario                |
 |   b)  | Alta de sala                   |
@@ -100,19 +109,35 @@ while True:
 
     if opcion == "a":
 
-        nombre_user = input("Ingrese el nombre del usuario:\n")
+        while True:
 
-        id_user += 1
+            nombre_user = input("Ingrese el nombre del usuario:\n")
 
-        usuarios[str(id_user)] = nombre_user
+            if nombre_user == "":
+                print("El nombre no puede quedar vació.\n")
+                continue
 
-        print(f"\nEl usuario '{nombre_user}' fue registrado con la clave '{id_user}'.\n")
+            else:
+
+                id_user += 1
+
+                usuarios[str(id_user)] = nombre_user
+
+                print(f"\nEl usuario '{nombre_user}' fue registrado con la clave '{id_user}'.\n")
+                break
 
     elif opcion == "b":
 
-        id_sala += 1
+        while True:
 
-        nombre_sala = input("Ingrese el nombre de la sala:\n")
+            nombre_sala = input("Ingrese el nombre de la sala:\n")
+
+            if nombre_sala == "":
+                print("El nombre no puede quedar vació.\n")
+                continue
+
+            else:
+                break
 
         while True:
 
@@ -123,13 +148,13 @@ while True:
             except ValueError:
                 print("Ingrese un numero entero.")
 
+        id_sala += 1
+
         salas[id_sala] = {"nombre_sala": nombre_sala, "cupo": cupo_sala}
 
         print(f"\nLa sala '{nombre_sala}' fue registrada con clave '{id_sala}'.\n")
 
     elif opcion == "c":
-
-        folio += 1
 
         user_id = input("Ingrese su clave de usuario:\n")
 
@@ -139,7 +164,7 @@ while True:
 
                 try:
 
-                    fecha_reserva = input("ingrese la fecha de la reserva (dd/mm/aaaa):\n")
+                    fecha_reserva = input("Ingrese la fecha a reservar (dd/mm/aaaa):\n")
                     fecha_datetime = datetime.datetime.strptime(fecha_reserva, '%d/%m/%Y').date()
                     break
 
@@ -158,11 +183,15 @@ while True:
 
                     while True:
 
-                        horario_reserva = input("""Ingrese el horario de la sala:
-a) Matutino
-b) Vespertino
-c) Nocturno
+                        horario_reserva = input("""+------------------------------------+
+| Ingrese el horario de la sala:     |
+|-------+----------------------------|
+|   a)  | Matutino                   |
+|   b)  | Vespertino                 |
+|   c)  | Nocturno                   |
++-------+----------------------------+
 """).lower()
+
                         if horario_reserva == "a":
 
                             horario_reserva = "matutino"
@@ -180,7 +209,7 @@ c) Nocturno
 
                         else:
 
-                            print("Opcion no valida.")
+                            print("Opción no valida.")
                             continue
 
                     for reserva in reservas.values():
@@ -191,21 +220,26 @@ c) Nocturno
 
                                 if horario_reserva not in reserva.values():
 
-                                    nombre_evento = input("Ingrese el nombre del evento:\n")
+                                    while True:
 
-                                    reservas[folio] = {
-                                        "fecha": fecha_datetime.strftime("%d/%m/%Y"),
-                                        "sala": sala_id,
-                                        "horario": horario_reserva,
-                                        "usuario": user_id,
-                                        "evento": nombre_evento,
-                                    }
+                                        nombre_evento = input("Ingrese el nombre del evento\n")
 
-                                    imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
-                                                          usuarios[user_id], nombre_evento, horario_reserva)
+                                        if nombre_evento == "":
+                                            print("El nombre no puede quedar vació.\n")
+                                            continue
 
+                                        else:
+
+                                            folio += 1
+
+                                            guardar_reserva(reservas, folio, fecha_reserva, sala_id,
+                                                            user_id, nombre_evento, horario_reserva)
+
+                                            imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
+                                                                  usuarios[user_id], nombre_evento, horario_reserva)
+
+                                            break
                                     break
-
                                 else:
 
                                     print("Horario Ocupado")
@@ -213,63 +247,77 @@ c) Nocturno
 
                             else:
 
-                                nombre_evento = input("Ingrese el nombre del evento:\n")
+                                while True:
 
-                                reservas[folio] = {
-                                    "fecha": fecha_datetime.strftime("%d/%m/%Y"),
-                                    "sala": sala_id,
-                                    "horario": horario_reserva,
-                                    "usuario": user_id,
-                                    "evento": nombre_evento,
-                                }
+                                    nombre_evento = input("Ingrese el nombre del evento\n")
+
+                                    if nombre_evento == "":
+                                        print("El nombre no puede quedar vació.\n")
+                                        continue
+
+                                    else:
+
+                                        folio += 1
+
+                                        guardar_reserva(reservas, folio, fecha_reserva, sala_id,
+                                                        user_id, nombre_evento, horario_reserva)
+
+                                        imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
+                                                              usuarios[user_id], nombre_evento, horario_reserva)
+                                        break
+                                break
+                        else:
+
+                            while True:
+
+                                nombre_evento = input("Ingrese el nombre del evento\n")
+
+                                if nombre_evento == "":
+                                    print("El nombre no puede quedar vació.\n")
+                                    continue
+
+                                else:
+
+                                    folio += 1
+
+                                    guardar_reserva(reservas, folio, fecha_reserva, sala_id,
+                                                    user_id, nombre_evento, horario_reserva)
+
+                                    imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
+                                                          usuarios[user_id], nombre_evento, horario_reserva)
+                                    break
+                        break
+                    else:
+
+                        while True:
+
+                            nombre_evento = input("Ingrese el nombre del evento\n")
+
+                            if nombre_evento == "":
+                                print("El nombre no puede quedar vació.\n")
+                                continue
+
+                            else:
+
+                                folio += 1
+
+                                guardar_reserva(reservas, folio, fecha_reserva, sala_id,
+                                                user_id, nombre_evento, horario_reserva)
 
                                 imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
                                                       usuarios[user_id], nombre_evento, horario_reserva)
-
                                 break
-
-                        else:
-
-                            nombre_evento = input("Ingrese el nombre del evento:\n")
-
-                            reservas[folio] = {
-                                "fecha": fecha_datetime.strftime("%d/%m/%Y"),
-                                "sala": sala_id,
-                                "horario": horario_reserva,
-                                "usuario": user_id,
-                                "evento": nombre_evento,
-                            }
-
-                            imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
-                                                  usuarios[user_id], nombre_evento, horario_reserva)
-
-                            break
-
-                    else:
-
-                        nombre_evento = input("Ingrese el nombre del evento:\n")
-
-                        reservas[folio] = {
-                            "fecha": fecha_datetime.strftime("%d/%m/%Y"),
-                            "sala": sala_id,
-                            "horario": horario_reserva,
-                            "usuario": user_id,
-                            "evento": nombre_evento,
-                        }
-
-                        imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
-                                              usuarios[user_id], nombre_evento, horario_reserva)
 
                 else:
 
-                    print("Sala no registrada.")
+                    print("Sala no registrada.\n")
 
             else:
 
-                print("Se necesitan dos dias de anticipacion para reservar un evento.")
+                print("Se necesitan dos días de anticipación para reservar un evento.\n")
         else:
 
-            print("Usuario no registrado.")
+            print("Usuario no registrado.\n")
 
     elif opcion == "d":
 
@@ -283,7 +331,7 @@ c) Nocturno
 
         else:
 
-            print("Folio invalido")
+            print("Folio invalido.\n")
 
     elif opcion == "e":
 
@@ -294,4 +342,4 @@ c) Nocturno
 
     else:
 
-        print("opcion no valida")
+        print("Opción no valida.\n")
