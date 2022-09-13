@@ -32,7 +32,7 @@ def imprimir_reporte():
         if fecha_formato in reserva_en_turno[1].values():
             contador += 1
 
-            reservas_formato["SALA"].append(reserva_en_turno[1]["sala"])
+            reservas_formato["SALA"].append(salas[reserva_en_turno[1]["sala"]]["nombre_sala"])
             reservas_formato["CLIENTE"].append(usuarios[reserva_en_turno[1]["usuario"]].capitalize())
             reservas_formato["EVENTO"].append(reserva_en_turno[1]["evento"].capitalize())
             reservas_formato["TURNO"].append(reserva_en_turno[1]["horario"].capitalize())
@@ -280,7 +280,7 @@ while True:
 
                                     folio += 1
 
-                                    guardar_reserva(reservas, folio, fecha_reserva, sala_id,
+                                    guardar_reserva(reservas, folio, fecha_reserva, salas[sala_id]["nombre_sala"],
                                                     user_id, nombre_evento, horario_reserva)
 
                                     imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
@@ -304,7 +304,7 @@ while True:
                                 guardar_reserva(reservas, folio, fecha_reserva, sala_id,
                                                 user_id, nombre_evento, horario_reserva)
 
-                                imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
+                                imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), salas[sala_id]["nombre_sala"],
                                                       usuarios[user_id], nombre_evento, horario_reserva)
                                 break
 
