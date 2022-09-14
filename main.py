@@ -115,12 +115,11 @@ while True:
 
             else:
 
-                id_user = max(usuarios, default=0) + 1
+                id_user = max(usuarios, default=100) + 1
 
                 usuarios[id_user] = nombre_user
 
                 print(f"\nEl usuario '{nombre_user}' fue registrado con la clave '{id_user}'.\n")
-                print(usuarios)
                 break
 
     elif opcion == "b":
@@ -150,9 +149,9 @@ while True:
         salas[id_sala] = {"nombre_sala": nombre_sala, "cupo": cupo_sala}
 
         print(f"\nLa sala '{nombre_sala}' fue registrada con clave '{id_sala}'.\n")
-        print(salas)
 
     elif opcion == "c":
+        print(reservas)
 
         while True:
 
@@ -246,7 +245,7 @@ while True:
 
                                         else:
 
-                                            folio = max(reservas, default=0) + 1
+                                            folio = max(reservas, default=10000) + 1
 
                                             guardar_reserva(reservas, folio, fecha_reserva, salas[sala_id]["nombre_sala"],
                                                             user_id, nombre_evento, horario_reserva)
@@ -273,7 +272,7 @@ while True:
 
                                     else:
 
-                                        folio = max(reservas, default=0) + 1
+                                        folio = max(reservas, default=10000) + 1
 
                                         guardar_reserva(reservas, folio, fecha_reserva, salas[sala_id]["nombre_sala"],
                                                         user_id, nombre_evento, horario_reserva)
@@ -294,7 +293,7 @@ while True:
 
                                 else:
 
-                                    folio = max(reservas, default=0) + 1
+                                    folio = max(reservas, default=10000) + 1
 
                                     guardar_reserva(reservas, folio, fecha_reserva, salas[sala_id]["nombre_sala"],
                                                     user_id, nombre_evento, horario_reserva)
@@ -315,7 +314,7 @@ while True:
 
                             else:
 
-                                folio = max(reservas, default=0) + 1
+                                folio = max(reservas, default=10000) + 1
 
                                 guardar_reserva(reservas, folio, fecha_reserva, salas[sala_id]["nombre_sala"],
                                                 user_id, nombre_evento, horario_reserva)
@@ -335,6 +334,7 @@ while True:
         else:
 
             print("Usuario no registrado.\n")
+
         print(reservas)
 
     elif opcion == "d":
