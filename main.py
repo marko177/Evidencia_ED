@@ -151,7 +151,6 @@ while True:
         print(f"\nLa sala '{nombre_sala}' fue registrada con clave '{id_sala}'.\n")
 
     elif opcion == "c":
-        print(reservas)
 
         while True:
 
@@ -247,7 +246,8 @@ while True:
 
                                             folio = max(reservas, default=10000) + 1
 
-                                            guardar_reserva(reservas, folio, fecha_reserva, salas[sala_id]["nombre_sala"],
+                                            guardar_reserva(reservas, folio, fecha_reserva,
+                                                            salas[sala_id]["nombre_sala"],
                                                             user_id, nombre_evento, horario_reserva)
 
                                             imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
@@ -334,8 +334,6 @@ while True:
         else:
 
             print("Usuario no registrado.\n")
-
-        print(reservas)
 
     elif opcion == "d":
 
