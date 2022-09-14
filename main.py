@@ -32,7 +32,7 @@ def imprimir_reporte():
         if fecha_formato in reserva_en_turno[1].values():
             contador += 1
 
-            reservas_formato["SALA"].append(reserva_en_turno[1]["sala"])
+            reservas_formato["SALA"].append(salas[reserva_en_turno[1]["sala"]]["nombre_sala"])
             reservas_formato["CLIENTE"].append(usuarios[reserva_en_turno[1]["usuario"]].capitalize())
             reservas_formato["EVENTO"].append(reserva_en_turno[1]["evento"].capitalize())
             reservas_formato["TURNO"].append(reserva_en_turno[1]["horario"].capitalize())
@@ -58,7 +58,7 @@ def imprimir_confirmacion(folio_func, fecha, sala, cliente, evento, horario):
     formato_impresion = {
         "FOLIO": [folio_func],
         "FECHA": [fecha],
-        "SALA": [sala],
+        "SALA": [salas[sala]["nombre_sala"]],
         "CLIENTE": [cliente.capitalize()],
         "NOMBRE DEL EVENTO": [evento.capitalize()],
         "TURNO": [horario.capitalize()]
@@ -247,7 +247,7 @@ while True:
                                             folio = max(reservas, default=10000) + 1
 
                                             guardar_reserva(reservas, folio, fecha_reserva,
-                                                            salas[sala_id]["nombre_sala"],
+                                                            sala_id,
                                                             user_id, nombre_evento, horario_reserva)
 
                                             imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
@@ -274,7 +274,7 @@ while True:
 
                                         folio = max(reservas, default=10000) + 1
 
-                                        guardar_reserva(reservas, folio, fecha_reserva, salas[sala_id]["nombre_sala"],
+                                        guardar_reserva(reservas, folio, fecha_reserva, sala_id,
                                                         user_id, nombre_evento, horario_reserva)
 
                                         imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
@@ -295,7 +295,7 @@ while True:
 
                                     folio = max(reservas, default=10000) + 1
 
-                                    guardar_reserva(reservas, folio, fecha_reserva, salas[sala_id]["nombre_sala"],
+                                    guardar_reserva(reservas, folio, fecha_reserva, sala_id,
                                                     user_id, nombre_evento, horario_reserva)
 
                                     imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
@@ -316,11 +316,11 @@ while True:
 
                                 folio = max(reservas, default=10000) + 1
 
-                                guardar_reserva(reservas, folio, fecha_reserva, salas[sala_id]["nombre_sala"],
+                                guardar_reserva(reservas, folio, fecha_reserva, sala_id,
                                                 user_id, nombre_evento, horario_reserva)
 
                                 imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"),
-                                                      salas[sala_id]["nombre_sala"],
+                                                      sala_id,
                                                       usuarios[user_id], nombre_evento, horario_reserva)
                                 break
 
@@ -353,6 +353,8 @@ while True:
             nombre_evento = input("Ingrese el nuevo nombre del evento:\n")
 
             reservas[folio_mod]["evento"] = nombre_evento
+
+            print("Evento modificado con exito.\n")
 
         else:
 
