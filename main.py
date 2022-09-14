@@ -32,7 +32,7 @@ def imprimir_reporte():
         if fecha_formato in reserva_en_turno[1].values():
             contador += 1
 
-            reservas_formato["SALA"].append(salas[reserva_en_turno[1]["sala"]]["nombre_sala"])
+            reservas_formato["SALA"].append(reserva_en_turno[1]["sala"])
             reservas_formato["CLIENTE"].append(usuarios[reserva_en_turno[1]["usuario"]].capitalize())
             reservas_formato["EVENTO"].append(reserva_en_turno[1]["evento"].capitalize())
             reservas_formato["TURNO"].append(reserva_en_turno[1]["horario"].capitalize())
@@ -87,10 +87,6 @@ usuarios = {}
 salas = {}
 reservas = {}
 
-id_user = 1000
-id_sala = 0
-folio = 100000
-
 fecha_hoy = datetime.date.today()
 
 while True:
@@ -119,11 +115,12 @@ while True:
 
             else:
 
-                id_user += 1
+                id_user = max(usuarios, default=0) + 1
 
-                usuarios[str(id_user)] = nombre_user
+                usuarios[id_user] = nombre_user
 
                 print(f"\nEl usuario '{nombre_user}' fue registrado con la clave '{id_user}'.\n")
+                print(usuarios)
                 break
 
     elif opcion == "b":
@@ -148,15 +145,25 @@ while True:
             except ValueError:
                 print("Ingrese un numero entero.")
 
-        id_sala += 1
+        id_sala = max(salas, default=0) + 1
 
         salas[id_sala] = {"nombre_sala": nombre_sala, "cupo": cupo_sala}
 
         print(f"\nLa sala '{nombre_sala}' fue registrada con clave '{id_sala}'.\n")
+        print(salas)
 
     elif opcion == "c":
 
-        user_id = input("Ingrese su clave de usuario:\n")
+        while True:
+
+            try:
+
+                user_id = int(input("Ingrese su clave de usuario:\n"))
+                break
+
+            except ValueError:
+
+                continue
 
         if user_id in usuarios.keys():
 
@@ -239,9 +246,9 @@ while True:
 
                                         else:
 
-                                            folio += 1
+                                            folio = max(reservas, default=0) + 1
 
-                                            guardar_reserva(reservas, folio, fecha_reserva, sala_id,
+                                            guardar_reserva(reservas, folio, fecha_reserva, salas[sala_id]["nombre_sala"],
                                                             user_id, nombre_evento, horario_reserva)
 
                                             imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
@@ -266,9 +273,9 @@ while True:
 
                                     else:
 
-                                        folio += 1
+                                        folio = max(reservas, default=0) + 1
 
-                                        guardar_reserva(reservas, folio, fecha_reserva, sala_id,
+                                        guardar_reserva(reservas, folio, fecha_reserva, salas[sala_id]["nombre_sala"],
                                                         user_id, nombre_evento, horario_reserva)
 
                                         imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
@@ -287,7 +294,7 @@ while True:
 
                                 else:
 
-                                    folio += 1
+                                    folio = max(reservas, default=0) + 1
 
                                     guardar_reserva(reservas, folio, fecha_reserva, salas[sala_id]["nombre_sala"],
                                                     user_id, nombre_evento, horario_reserva)
@@ -308,9 +315,9 @@ while True:
 
                             else:
 
-                                folio += 1
+                                folio = max(reservas, default=0) + 1
 
-                                guardar_reserva(reservas, folio, fecha_reserva, sala_id,
+                                guardar_reserva(reservas, folio, fecha_reserva, salas[sala_id]["nombre_sala"],
                                                 user_id, nombre_evento, horario_reserva)
 
                                 imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"),
@@ -328,6 +335,7 @@ while True:
         else:
 
             print("Usuario no registrado.\n")
+        print(reservas)
 
     elif opcion == "d":
 
