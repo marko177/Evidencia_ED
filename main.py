@@ -177,7 +177,16 @@ while True:
 
             if limite_reserva > 2:
 
-                sala_id = int(input("Ingrese la clave de la sala:\n"))
+                while True:
+
+                    try:
+
+                        sala_id = int(input("Ingrese la clave de la sala:\n"))
+                        break
+
+                    except ValueError:
+
+                        continue
 
                 if sala_id in salas.keys():
 
@@ -304,7 +313,8 @@ while True:
                                 guardar_reserva(reservas, folio, fecha_reserva, sala_id,
                                                 user_id, nombre_evento, horario_reserva)
 
-                                imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), salas[sala_id]["nombre_sala"],
+                                imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"),
+                                                      salas[sala_id]["nombre_sala"],
                                                       usuarios[user_id], nombre_evento, horario_reserva)
                                 break
 
@@ -321,7 +331,16 @@ while True:
 
     elif opcion == "d":
 
-        folio_mod = int(input("Ingrese el folio de la reserva:\n"))
+        while True:
+
+            try:
+
+                folio_mod = int(input("Ingrese el folio de la reserva:\n"))
+                break
+
+            except ValueError:
+
+                continue
 
         if folio_mod in reservas.keys():
 
