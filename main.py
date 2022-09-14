@@ -58,7 +58,7 @@ def imprimir_confirmacion(folio_func, fecha, sala, cliente, evento, horario):
     formato_impresion = {
         "FOLIO": [folio_func],
         "FECHA": [fecha],
-        "SALA": [sala],
+        "SALA": [salas[sala]["nombre_sala"]],
         "CLIENTE": [cliente.capitalize()],
         "NOMBRE DEL EVENTO": [evento.capitalize()],
         "TURNO": [horario.capitalize()]
@@ -86,10 +86,6 @@ def guardar_reserva(diccionario, folio_func, fecha, sala, cliente, evento, horar
 usuarios = {}
 salas = {}
 reservas = {}
-
-id_user = 1000
-id_sala = 0
-folio = 100000
 
 fecha_hoy = datetime.date.today()
 
@@ -119,9 +115,9 @@ while True:
 
             else:
 
-                id_user += 1
+                id_user = max(usuarios, default=100) + 1
 
-                usuarios[str(id_user)] = nombre_user
+                usuarios[id_user] = nombre_user
 
                 print(f"\nEl usuario '{nombre_user}' fue registrado con la clave '{id_user}'.\n")
                 break
@@ -148,7 +144,7 @@ while True:
             except ValueError:
                 print("Ingrese un numero entero.")
 
-        id_sala += 1
+        id_sala = max(salas, default=0) + 1
 
         salas[id_sala] = {"nombre_sala": nombre_sala, "cupo": cupo_sala}
 
@@ -156,7 +152,16 @@ while True:
 
     elif opcion == "c":
 
-        user_id = input("Ingrese su clave de usuario:\n")
+        while True:
+
+            try:
+
+                user_id = int(input("Ingrese su clave de usuario:\n"))
+                break
+
+            except ValueError:
+
+                continue
 
         if user_id in usuarios.keys():
 
@@ -239,9 +244,10 @@ while True:
 
                                         else:
 
-                                            folio += 1
+                                            folio = max(reservas, default=10000) + 1
 
-                                            guardar_reserva(reservas, folio, fecha_reserva, sala_id,
+                                            guardar_reserva(reservas, folio, fecha_reserva,
+                                                            sala_id,
                                                             user_id, nombre_evento, horario_reserva)
 
                                             imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
@@ -266,7 +272,7 @@ while True:
 
                                     else:
 
-                                        folio += 1
+                                        folio = max(reservas, default=10000) + 1
 
                                         guardar_reserva(reservas, folio, fecha_reserva, sala_id,
                                                         user_id, nombre_evento, horario_reserva)
@@ -287,9 +293,9 @@ while True:
 
                                 else:
 
-                                    folio += 1
+                                    folio = max(reservas, default=10000) + 1
 
-                                    guardar_reserva(reservas, folio, fecha_reserva, salas[sala_id]["nombre_sala"],
+                                    guardar_reserva(reservas, folio, fecha_reserva, sala_id,
                                                     user_id, nombre_evento, horario_reserva)
 
                                     imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"), sala_id,
@@ -308,13 +314,13 @@ while True:
 
                             else:
 
-                                folio += 1
+                                folio = max(reservas, default=10000) + 1
 
                                 guardar_reserva(reservas, folio, fecha_reserva, sala_id,
                                                 user_id, nombre_evento, horario_reserva)
 
                                 imprimir_confirmacion(folio, fecha_datetime.strftime("%d/%m/%Y"),
-                                                      salas[sala_id]["nombre_sala"],
+                                                      sala_id,
                                                       usuarios[user_id], nombre_evento, horario_reserva)
                                 break
 
@@ -347,6 +353,8 @@ while True:
             nombre_evento = input("Ingrese el nuevo nombre del evento:\n")
 
             reservas[folio_mod]["evento"] = nombre_evento
+
+            print("Evento modificado con exito.\n")
 
         else:
 
