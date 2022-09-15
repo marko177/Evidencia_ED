@@ -83,15 +83,9 @@ def guardar_reserva(diccionario, folio_func, fecha, sala, cliente, evento, horar
     }
 
 
-usuarios = {101: "user"}
-salas = {1: {"nombre_sala": "sala"}}
-reservas = {10001:  {
-        "fecha": "12/12/2022",
-        "sala": 1,
-        "horario": "matutino",
-        "usuario": 101,
-        "evento": "evento 1",
-    }}
+usuarios = {}
+salas = {}
+reservas = {}
 
 fecha_hoy = datetime.date.today()
 
