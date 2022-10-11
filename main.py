@@ -1,19 +1,19 @@
+import csv
 import datetime
 import pandas
 from tabulate import tabulate
 
 
-# formato reservas[folio] = (fecha_reserva, sala_id, horario_reserva, user_id, nombre_evento)
-
-
 def imprimir_reporte(fecha_f):
     fecha_formato = fecha_f.strftime("%d/%m/%Y")
 
-    reservas_formato = {"SALA": [],
-                        "CLIENTE": [],
-                        "EVENTO": [],
-                        "TURNO": []
-                        }
+    reservas_formato = {
+        "FOLIO": [],
+        "SALA": [],
+        "CLIENTE": [],
+        "EVENTO": [],
+        "TURNO": []
+    }
 
     contador = 0
 
@@ -21,7 +21,7 @@ def imprimir_reporte(fecha_f):
 
         if fecha_formato == reserva_en_turno[1][0]:
             contador += 1
-
+            reservas_formato["FOLIO"].append(reserva_en_turno[0])
             reservas_formato["SALA"].append(salas[reserva_en_turno[1][1]][0])
             reservas_formato["CLIENTE"].append(usuarios[reserva_en_turno[1][3]].capitalize())
             reservas_formato["EVENTO"].append(reserva_en_turno[1][4].capitalize())
@@ -63,9 +63,48 @@ def imprimir_confirmacion(folio_func, fecha_f, sala, user, evento, horario):
     print("")
 
 
-usuarios = {1: "user"}
-salas = {1: ("sala", 10)}
-reservas = {1: ("12/12/2022", 1, "matutino", 1, "evento")}
+try:
+    salas = {}
+
+    with open("salas.csv", "r") as file:
+
+        reader = csv.reader(file)
+
+        for row in reader:
+            salas[int(row[0])] = [row[1], int(row[2])]
+
+except FileNotFoundError:
+    salas = {}
+
+try:
+    usuarios = {}
+
+    with open("usuarios.csv", "r") as file:
+
+        reader = csv.reader(file)
+
+        for row in reader:
+            usuarios[int(row[0])] = row[1]
+
+except:
+    usuarios = {}
+
+try:
+    reservas = {}
+
+    with open("reservas.csv", "r") as file:
+
+        reader = csv.reader(file)
+
+        for row in reader:
+            reservas[int(row[0])] = [row[1], int(row[2]), row[3], int(row[4]), row[5]]
+
+except FileNotFoundError:
+    reservas = {}
+
+# usuarios = {1: "User"}
+# salas = {1: ("Sala", 10)}
+# reservas = {1: ["12/12/2022", 1, "matutino", 1, "evento"]}
 
 fecha_hoy = datetime.date.today()
 
@@ -119,14 +158,18 @@ while True:
 
             try:
                 cupo_sala = int(input("Ingrese la capacidad de la sala:\n"))
-                break
+                if cupo_sala > 0:
+                    break
+                else:
+                    print("La capacidad de la sala debe ser mayor a 0.\n")
+                    continue
 
             except ValueError:
                 print("Ingrese un numero entero.")
 
         id_sala = max(salas, default=0) + 1
 
-        salas[id_sala] = (nombre_sala, cupo_sala)
+        salas[id_sala] = [nombre_sala, cupo_sala]
 
         print(f"\nLa sala '{nombre_sala}' fue registrada con clave '{id_sala}'.\n")
 
@@ -172,7 +215,7 @@ while True:
 
                 if limite_reserva > 2:
 
-                    print(tabulate([(k,) + v for k, v in salas.items()], headers=["Clave", "Nombre", "Cupo"],
+                    print(tabulate([[k, ] + v for k, v in salas.items()], headers=["Clave", "Nombre", "Cupo"],
                                    tablefmt='psql', numalign="left"))
 
                     while True:
@@ -221,13 +264,7 @@ while True:
 
                         for reserva in reservas.values():
 
-                            print(reservas.values())
-                            print(reserva)
-                            print(reserva[:3])
-                            print([fecha_reserva, sala_id, horario_reserva])
-
                             if [fecha_reserva, sala_id, horario_reserva] == reserva[:3]:
-
                                 print("Horario Ocupado")
                                 break
 
@@ -276,11 +313,13 @@ while True:
 
         if folio_mod in reservas.keys():
 
-            nombre_evento = input("Ingrese el nuevo nombre del evento:\n")
+            nombre_nuevo = input("Ingrese el nuevo nombre del evento:\n")
 
-            reservas[folio_mod][3] = nombre_evento
+            nombre_previo = reservas[folio_mod][4]
 
-            print("Evento modificado con exito.\n")
+            reservas[folio_mod][4] = nombre_nuevo
+
+            print(f"El evento {nombre_previo} fue modificado a {nombre_nuevo} con exito.\n")
 
         else:
 
@@ -306,6 +345,11 @@ while True:
     elif opcion == "f":
         break
 
+    # ********************************* TESTING BORRAR *********************************
+    elif opcion == "g":
+        print("reporte excel")
+
+    # ********************************* TESTING BORRAR *********************************
     elif opcion == "t":
 
         print(reservas)
@@ -315,6 +359,24 @@ while True:
 
         print("Opción no valida.\n")
 
-print(usuarios)
-print(salas)
-print(reservas)
+reporte = [[k, ] + v for k, v in reservas.items()]
+
+with open("reservas.csv", "w", newline="") as file:
+    writer = csv.writer(file)
+    writer.writerows(reporte)
+
+reporte = [[k, ] + v for k, v in salas.items()]
+
+with open("salas.csv", "w", newline="") as file:
+    writer = csv.writer(file)
+    writer.writerows(reporte)
+
+reporte = [[k, v] for k, v in usuarios.items()]
+
+with open("usuarios.csv", "w", newline="") as file:
+    writer = csv.writer(file)
+    writer.writerows(reporte)
+
+print(usuarios)  # ********************************* TESTING BORRAR *********************************
+print(salas)  # ********************************* TESTING BORRAR *********************************
+print(reservas)  # ********************************* TESTING BORRAR *********************************
