@@ -130,7 +130,7 @@ Opción: """).lower()
                         if limite_reserva > 2:
 
                             print(tabulate([[folio, ] + datos for folio, datos in salas.items()],
-                                           headers=["Clave", "Nombre", "Cupo"], tablefmt='psql', numalign="left"))
+                                           headers=["Clave", "Sala", "Cupo"], tablefmt='psql', numalign="left"))
 
                             while True:
 
@@ -187,9 +187,10 @@ Opción: """).lower()
                                             reservas[folio] = [fecha_reserva, sala_id, turno, user_id, nombre_evento]
 
                                             print(tabulate([[folio, fecha_reserva, salas[sala_id][0], turnos[turno],
-                                                  usuarios[user_id], nombre_evento]],
-                                                  headers=["Folio", "Fecha", "Sala", "Turno", "Cliente", "Evento"],
-                                                  tablefmt='psql', numalign="left"))
+                                                             usuarios[user_id], nombre_evento]],
+                                                           headers=["Folio", "Fecha", "Sala", "Turno", "Cliente",
+                                                                    "Evento"],
+                                                           tablefmt='psql', numalign="left"))
                                             break
                             else:
                                 print("Sala no registrada.\n")
@@ -279,7 +280,8 @@ Opción: """).lower()
                             print("Ingrese una fecha valida en el formato dd/mm/aaaa.\n")
                             continue
 
-                    reporte = [[k, v[0], salas[v[1]][0], turnos[v[2]], usuarios[v[3]], v[4]] for k, v in reservas.items()
+                    reporte = [[k, v[0], salas[v[1]][0], turnos[v[2]], usuarios[v[3]], v[4]] for k, v in
+                               reservas.items()
                                if fecha_reporte in v]
 
                     if reporte:
@@ -304,23 +306,19 @@ Opción: """).lower()
                         except ValueError:
                             print("Ingrese una fecha valida en el formato dd/mm/aaaa.\n")
                             continue
-                    report = [[k, v[0], salas[v[1]][0], turnos[v[2]], usuarios[v[3]], v[4]] for k, v in reservas.items()
-                              if fecha_reporte in v]
+                    reporte = [[k, v[0], salas[v[1]][0], turnos[v[2]], usuarios[v[3]], v[4]] for k, v in
+                               reservas.items() if fecha_reporte in v]
 
-                    reporte = dict(Folio=[k for k, v in reservas.items() if fecha_reporte in v],
-                                   Fecha=[v[0] for k, v in reservas.items() if fecha_reporte in v],
-                                   Sala=[salas[v[1]][0] for k, v in reservas.items() if fecha_reporte in v],
-                                   Turno=[turnos[v[2]] for k, v in reservas.items() if fecha_reporte in v],
-                                   Cliente=[usuarios[v[3]] for k, v in reservas.items() if fecha_reporte in v],
-                                   Evento=[v[4] for k, v in reservas.items() if fecha_reporte in v]
-                                   )
+                    if reporte:
+                        df = pd.DataFrame(reporte)
 
-                    df = pd.DataFrame(reporte)
+                        writer = pd.ExcelWriter(f"reporte-{fecha_reporte.replace('/', '-')}.xlsx")
+                        df.to_excel(writer)
+                        writer.save()
+                        print(f"Se exporto el reporte como reporte-{fecha_reporte.replace('/', '-')}.xlsx\n")
 
-                    writer = pd.ExcelWriter("reporte.xlsx")
-                    df.to_excel(writer)
-                    writer.save()
-                    print("Se exporto el reporte a un archivo .xlsx")
+                    else:
+                        print("No har reservas para esa fecha.\n")
 
                 else:
                     print("No hay reservas registradas.\n")
