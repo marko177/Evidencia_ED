@@ -1,8 +1,9 @@
 import csv
 import datetime
-import openpyxl
 import pandas as pd
 from tabulate import tabulate
+
+# Se necesita instalar openpyxl para el guardado del reporte en Excel.
 
 check = 0
 
