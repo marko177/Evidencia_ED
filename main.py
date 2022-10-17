@@ -1,5 +1,6 @@
 import csv
 import datetime
+import openpyxl
 import pandas as pd
 from tabulate import tabulate
 
@@ -66,8 +67,8 @@ while True:
 |   a)  | Reservaciones                  |
 |   b)  | Reportes                       |
 |   c)  | Alta de salas                  |
-|   e)  | Alta de clientes               |
-|   f)  | Salir                          |
+|   d)  | Alta de clientes               |
+|   e)  | Salir                          |
 +-------+--------------------------------+
 Opción: """).lower()
 
@@ -306,11 +307,12 @@ Opción: """).lower()
                         except ValueError:
                             print("Ingrese una fecha valida en el formato dd/mm/aaaa.\n")
                             continue
+
                     reporte = [[k, v[0], salas[v[1]][0], turnos[v[2]], usuarios[v[3]], v[4]] for k, v in
                                reservas.items() if fecha_reporte in v]
 
                     if reporte:
-                        df = pd.DataFrame(reporte)
+                        df = pd.DataFrame(reporte, columns=["Folio", "Fecha", "Sala", "Horario", "Cliente", "Evento"])
 
                         writer = pd.ExcelWriter(f"reporte-{fecha_reporte.replace('/', '-')}.xlsx")
                         df.to_excel(writer)
@@ -362,7 +364,7 @@ Opción: """).lower()
 
         print(f"\nLa sala '{nombre_sala}' fue registrada con clave '{id_sala}'.\n")
 
-    elif opcion == "e":
+    elif opcion == "d":
 
         while True:
 
@@ -381,13 +383,9 @@ Opción: """).lower()
                 print(f"\nEl usuario '{nombre_user}' fue registrado con la clave '{id_user}'.\n")
                 break
 
-    elif opcion == "f":
+    elif opcion == "e":
         break
 
-    elif opcion == "t":
-        print(salas)
-        print(usuarios)
-        print(reservas)
     else:
         print("Opción no valida.\n")
 
