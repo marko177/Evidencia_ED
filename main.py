@@ -244,11 +244,15 @@ Opción: """).lower()
                 salas_disponibles = sorted(list(salas_posibles - reservas_actuales))
 
                 reporte = [[sala, salas[sala][0], turnos[turno]] for sala, turno in salas_disponibles]
-
-                print(f"Salas disponibles el día {fecha_requerida}:")
-                print(tabulate(reporte, headers=["Clave", "Sala", "Turno"], tablefmt='psql', numalign="left"))
-                print("")
-
+                
+                if reporte:
+                    print(f"Salas disponibles el día {fecha_requerida}:")
+                    print(tabulate(reporte, headers=["Clave", "Sala", "Turno"], tablefmt='psql', numalign="left"))
+                    print("")
+                else:
+                    print("No hay salas disponibles")
+                    print("")
+                    
             elif opcion_reserva == "d":
                 break
 
