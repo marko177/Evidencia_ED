@@ -1,64 +1,59 @@
-import csv
 import datetime
+from os.path import exists
 import pandas as pd
 from tabulate import tabulate
+import sqlite3
+from sqlite3 import Error
 
 # Se necesita instalar openpyxl para el guardado del reporte en Excel.
 
+conexion = sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
 check = 0
-
 try:
-    salas = {}
 
-    with open("salas.csv", "r") as file:
+    if exists("prueba28oct.db"):
+        check = 1
 
-        reader = csv.reader(file)
+    with conexion as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS users (
+                            id_user INTEGER,
+                            name_user TEXT NOT NULL,
+                            PRIMARY KEY(id_user)
+                        );
+                        """)
+        cursor.execute("""CREATE TABLE IF NOT EXISTS salas (
+                            id_sala INTEGER,
+                            nombre_sala TEXT NOT NULL,
+                            capacidad_sala INTEGER NOT NULL,
+                            PRIMARY KEY(id_sala)
+                        );
+                        """)
+        cursor.execute("""CREATE TABLE IF NOT EXISTS reservaciones (
+                            folio INTEGER,
+                            fecha timestamp NOT NULL,
+                            sala INTEGER NOT NULL,
+                            turno INTEGER NOT NULL,
+                            cliente INTEGER NOT NULL,
+                            nombre_evento TEXT NOT NULL,
+                            FOREIGN KEY(sala) REFERENCES salas(id_sala),
+                            FOREIGN KEY(cliente) REFERENCES users(id_user),
+                            PRIMARY KEY(folio)
+                        );
+                        """)
+        if check == 1:
+            print("Se cargo la base de datos con exito.\n")
+        else:
+            print("Se creo la base de datos con exito.\n")
 
-        for row in reader:
-            salas[int(row[0])] = [row[1], int(row[2])]
-
-    check += 1
-
-except FileNotFoundError:
-    salas = {}
-
-try:
-    usuarios = {}
-
-    with open("usuarios.csv", "r") as file:
-
-        reader = csv.reader(file)
-
-        for row in reader:
-            usuarios[int(row[0])] = row[1]
-
-    check += 1
-
+except Error as e:
+    print(e)
 except:
-    usuarios = {}
-
-try:
-    reservas = {}
-
-    with open("reservas.csv", "r") as file:
-
-        reader = csv.reader(file)
-
-        for row in reader:
-            reservas[int(row[0])] = [row[1], int(row[2]), int(row[3]), int(row[4]), row[5]]
-    check += 1
-
-except FileNotFoundError:
-    reservas = {}
-
-if check == 3:
-    print("\n**\tSe cargaron los registros de reservas, salas y usuarios correctamente.\t**\n")
-
-else:
-    print("\n**\tNo se encontraron registros, se guardaran al finalizar el programa.\t**\n")
+    print("Ocurrió un error")
 
 turnos = {1: "Matutino", 2: "Vespertino", 3: "Nocturno"}
-fecha_hoy = datetime.date.today()
+fecha_hoy = datetime.datetime.today().date()
 
 while True:
 
@@ -82,7 +77,8 @@ Opción: """).lower()
 |   a)  | Registrar una nueva reservación            |
 |   b)  | Modificar descripción de una reservación   |
 |   c)  | Disponibilidad de salas para una fecha     |
-|   d)  | Volver al Menú Principal                   |
+|   d)  | Eliminar una reserva                       |
+|   e)  | Volver al Menú Principal                   |
 +-------+--------------------------------------------+
 Opción: """).lower()
 
@@ -91,13 +87,31 @@ Opción: """).lower()
                 continue
 
             elif opcion_reserva == "a":
-                if usuarios:
 
-                    print(tabulate(usuarios.items(), headers=["Clave", "Nombre"], tablefmt='psql', showindex=False))
+                with conexion as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT * FROM salas;")
+                    salas = cursor.fetchall()
+                    if salas:
+                        pass
+                    else:
+                        print("No hay salas registradas.\n")
+                        continue
+                    cursor.execute("SELECT * FROM users;")
 
-                else:
-                    print("No hay clientes registrados.\n")
-                    continue
+                    usuarios = cursor.fetchall()
+                    if usuarios:
+                        pass
+                    else:
+                        print("No hay clientes registrados.\n")
+                        continue
+
+                    usuarios_reporte = list()
+
+                    for usuario in usuarios:
+                        usuarios_reporte.append([usuario[0], usuario[1]])
+
+                    print(tabulate(usuarios_reporte, headers=["Clave", "Nombre"], tablefmt='psql', showindex=False))
 
                 while True:
 
@@ -110,46 +124,58 @@ Opción: """).lower()
 
                         continue
 
-                if user_id in usuarios.keys():
+                with conexion as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT * FROM users WHERE id_user=(?);", [user_id])
+                    comprobacion_id = cursor.fetchall()
 
-                    if salas:
+                if comprobacion_id:
+
+                    while True:
+
+                        try:
+                            fecha_reserva = input("Ingrese la fecha a reservar (dd/mm/aaaa):\n")
+                            fecha_datetime = datetime.datetime.strptime(fecha_reserva, '%d/%m/%Y')
+                            break
+
+                        except ValueError:
+
+                            print("Ingrese una fecha valida.\n")
+                            continue
+
+                    limite_reserva = (fecha_datetime.date() - fecha_hoy).days
+
+                    if limite_reserva >= 2:
+
+                        with conexion as conn:
+                            cursor = conn.cursor()
+                            cursor.execute("SELECT * FROM salas")
+                            salas_cursor = cursor.fetchall()
+                            salas = []
+                            for i in salas_cursor:
+                                salas.append([i[0], i[1], i[2]])
+                        print(tabulate(salas, headers=["Clave", "Sala", "Cupo"], tablefmt='psql', numalign="left"))
 
                         while True:
 
                             try:
 
-                                fecha_reserva = input("Ingrese la fecha a reservar (dd/mm/aaaa):\n")
-                                fecha_datetime = datetime.datetime.strptime(fecha_reserva, '%d/%m/%Y').date()
+                                sala_id = int(input("Ingrese la clave de la sala:\n"))
                                 break
 
                             except ValueError:
-
-                                print("Ingrese una fecha valida.\n")
                                 continue
 
-                        limite_reserva = (fecha_datetime - fecha_hoy).days
+                        with conexion as conn:
+                            cursor = conn.cursor()
+                            cursor.execute("SELECT * FROM salas WHERE id_sala=(?)", [sala_id])
+                            consulta_sala = cursor.fetchall()
 
-                        if limite_reserva > 2:
-
-                            print(tabulate([[folio, ] + datos for folio, datos in salas.items()],
-                                           headers=["Clave", "Sala", "Cupo"], tablefmt='psql', numalign="left"))
+                        if consulta_sala:
 
                             while True:
 
-                                try:
-
-                                    sala_id = int(input("Ingrese la clave de la sala:\n"))
-                                    break
-
-                                except ValueError:
-
-                                    continue
-
-                            if sala_id in salas.keys():
-
-                                while True:
-
-                                    turno = input("""+------------------------------------+
+                                turno = input("""+------------------------------------+
 | Ingrese el horario del evento:     |
 |-------+----------------------------|
 |   a)  | Matutino                   |
@@ -157,56 +183,98 @@ Opción: """).lower()
 |   c)  | Nocturno                   |
 +-------+----------------------------+
 Opción: """).lower()
-                                    if turno == "a":
-                                        turno = 1
-                                        break
-                                    elif turno == "b":
-                                        turno = 2
-                                        break
-                                    elif turno == "c":
-                                        turno = 3
-                                        break
-                                    else:
+                                if turno == "a":
+                                    turno = 1
+                                    break
+                                elif turno == "b":
+                                    turno = 2
+                                    break
+                                elif turno == "c":
+                                    turno = 3
+                                    break
+                                else:
+                                    print("Opción no valida.")
+                                    continue
 
-                                        print("Opción no valida.")
+                            try:
+                                with conexion as conn:
+                                    datos = fecha_datetime, sala_id, turno
+                                    cursor = conn.cursor()
+                                    cursor.execute("SELECT * FROM reservaciones WHERE fecha=(?) and sala=(?) and "
+                                                   "turno=(?)", datos)
+
+                                    consulta = cursor.fetchall()
+
+                            except e:
+                                print(e)
+
+                            if consulta:
+                                print("Horario Ocupado.\n")
+                                break
+
+                            else:
+
+                                while True:
+
+                                    nombre_evento = input("Ingrese el nombre del evento:\n")
+
+                                    if nombre_evento == "":
+
+                                        print("El nombre no puede quedar vació.\n")
                                         continue
 
-                                for reserva in reservas.values():
-                                    if [fecha_reserva, sala_id, turno] == reserva[:3]:
-                                        print("Horario Ocupado")
+                                    else:
+
+                                        try:
+
+                                            with conexion as conn:
+
+                                                cursor = conn.cursor()
+                                                cursor.execute(
+                                                    "INSERT INTO reservaciones(fecha,sala,turno,cliente,nombre_evento) "
+                                                    "VALUES(?, ?, ?, ?, ?)",
+                                                    (fecha_datetime, sala_id, turno, user_id, nombre_evento))
+
+                                                cursor.execute("SELECT nombre_sala FROM salas WHERE id_sala=(?)",
+                                                               [sala_id])
+                                                nombre_sala = cursor.fetchall()
+
+                                                cursor.execute("SELECT name_user FROM users WHERE id_user=(?)",
+                                                               [user_id])
+                                                nombre_usuario = cursor.fetchall()
+
+                                                cursor.execute("SELECT folio FROM reservaciones WHERE (fecha, sala, "
+                                                               "turno) = (?, ?, ?)", (fecha_datetime, sala_id, turno,))
+                                                folio = cursor.fetchall()[0][0]
+
+                                                print(tabulate([[folio, fecha_reserva, nombre_sala[0][0], turnos[turno],
+                                                                 nombre_usuario[0][0], nombre_evento]],
+                                                               headers=["Folio", "Fecha", "Sala", "Turno", "Cliente",
+                                                                        "Evento"],
+                                                               tablefmt='psql', numalign="left"))
+
+                                        except Error as e:
+                                            print(e)
+
                                         break
-                                else:
-                                    while True:
-                                        nombre_evento = input("Ingrese el nombre del evento:\n")
-
-                                        if nombre_evento == "":
-                                            print("El nombre no puede quedar vació.\n")
-                                            continue
-
-                                        else:
-                                            folio = max(reservas, default=0) + 1
-
-                                            reservas[folio] = [fecha_reserva, sala_id, turno, user_id, nombre_evento]
-
-                                            print(tabulate([[folio, fecha_reserva, salas[sala_id][0], turnos[turno],
-                                                             usuarios[user_id], nombre_evento]],
-                                                           headers=["Folio", "Fecha", "Sala", "Turno", "Cliente",
-                                                                    "Evento"],
-                                                           tablefmt='psql', numalign="left"))
-                                            break
-                            else:
-                                print("Sala no registrada.\n")
                         else:
-                            print("Se necesitan dos días de anticipación para reservar un evento.\n")
+                            print("Sala no registrada.\n")
                     else:
-                        print("No hay salas registradas.\n")
-                        continue
+                        print("Se necesitan dos días de anticipación para reservar un evento.\n")
                 else:
                     print("Usuario no registrado.\n")
 
             elif opcion_reserva == "b":
 
-                if reservas:
+                try:
+                    with conexion as conn:
+                        cursor = conn.cursor()
+                        cursor.execute("SELECT * FROM reservaciones;")
+                        validacion_reservas = cursor.fetchall()
+                except e:
+                    print(e)
+
+                if validacion_reservas:
                     while True:
 
                         try:
@@ -215,12 +283,30 @@ Opción: """).lower()
                         except ValueError:
                             continue
 
-                    if folio_mod in reservas.keys():
+                    try:
+                        with conexion as conn:
+                            cursor = conn.cursor()
+                            cursor.execute("SELECT * FROM reservaciones WHERE folio=(?)", [folio_mod])
+                            consulta_reserva = cursor.fetchall()
+                    except e:
+                        print(e)
+
+                    if consulta_reserva:
 
                         nombre_nuevo = input("Ingrese el nuevo nombre del evento:\n")
-                        nombre_previo = reservas[folio_mod][4]
-                        reservas[folio_mod][4] = nombre_nuevo
-                        print(f"El evento \"{nombre_previo}\" fue modificado a \"{nombre_nuevo}\" con éxito.\n")
+
+                        datos = folio_mod, nombre_nuevo
+                        try:
+                            with conexion as conn:
+                                cursor = conn.cursor()
+                                cursor.execute("SELECT nombre_evento FROM reservaciones WHERE folio=(?);", [folio_mod])
+                                nombre_antiguo = cursor.fetchall()
+                                cursor.execute("UPDATE reservaciones SET nombre_evento=(?) WHERE folio=(?);", datos)
+
+                        except e:
+                            print(e)
+
+                        print(f"El evento \"{nombre_antiguo[0][0]}\" fue modificado a \"{nombre_nuevo}\" con éxito.\n")
 
                     else:
                         print("Folio invalido.\n")
@@ -231,29 +317,126 @@ Opción: """).lower()
 
                 while True:
                     try:
-                        fecha_requerida = input("Ingrese la fecha a revisar (dd/mm/aaaa):\n")
-                        requerida_fecha = datetime.datetime.strptime(fecha_requerida, '%d/%m/%Y').date()
+                        fecha_reporte = input("Ingrese la fecha para el reporte (dd/mm/aaaa):\n")
+                        fecha_datetime = datetime.datetime.strptime(fecha_reporte, '%d/%m/%Y')
                         break
                     except ValueError:
                         print("Ingrese una fecha valida en el formato dd/mm/aaaa.\n")
                         continue
 
-                reservas_actuales = set([(v[1], v[2]) for v in reservas.values() if v[0] == fecha_requerida])
-                salas_posibles = set([(sala, turno) for sala in salas.keys() for turno in turnos.keys()])
+                try:
+                    with conexion as conn:
+                        cursor = conn.cursor()
+                        cursor.execute("SELECT sala, turno FROM reservaciones WHERE fecha=(?)", [fecha_datetime])
+                        salas_ocupadas = set(cursor.fetchall())
 
-                salas_disponibles = sorted(list(salas_posibles - reservas_actuales))
+                        cursor.execute("SELECT id_sala FROM salas")
+                        salas_creadas = cursor.fetchall()
+                        salas_posibles = []
+                        for sala in salas_creadas:
+                            for turno in turnos.keys():
+                                salas_posibles.append((sala[0], turno))
+                        salas_posibles = set(salas_posibles)
 
-                reporte = [[sala, salas[sala][0], turnos[turno]] for sala, turno in salas_disponibles]
-                
-                if reporte:
-                    print(f"Salas disponibles el día {fecha_requerida}:")
-                    print(tabulate(reporte, headers=["Clave", "Sala", "Turno"], tablefmt='psql', numalign="left"))
-                    print("")
-                else:
-                    print("No hay salas disponibles")
-                    print("")
-                    
+                        salas_disponibles = salas_posibles - salas_ocupadas
+
+                        reporte_salas = []
+
+                        for id_sala, turno in salas_disponibles:
+
+                            try:
+
+                                with conexion as conn:
+                                    cursor = conn.cursor()
+                                    cursor.execute("SELECT nombre_sala FROM salas WHERE id_sala = (?)", (id_sala,) )
+                                    nombre_sala = cursor.fetchall()[0][0]
+
+                                    reporte_salas.append([id_sala, nombre_sala, turnos[turno]])
+
+                            except Error as e:
+                                print(e)
+
+                        print(tabulate(reporte_salas, tablefmt="psql", headers=["Clave", "Nombre", "Turno"]))
+
+                except Error as e:
+                    print(e)
+
             elif opcion_reserva == "d":
+
+                try:
+                    with conexion as conn:
+                        cursor = conn.cursor()
+                        cursor.execute("SELECT * FROM reservaciones;")
+                        validacion_reservas = cursor.fetchall()
+                except e:
+                    print(e)
+
+                if validacion_reservas:
+                    while True:
+
+                        try:
+                            folio_id = int(input("Ingrese el folio de la reserva:\n"))
+                            break
+                        except ValueError:
+                            continue
+
+                    try:
+                        with conexion as conn:
+                            reporte = []
+                            cursor = conn.cursor()
+                            cursor.execute("SELECT * FROM reservaciones WHERE folio = (?)", [folio_id])
+                            reserva = cursor.fetchall()
+                            for i in reserva:
+                                cursor.execute("SELECT nombre_sala FROM salas WHERE id_sala=(?)", [i[2]])
+                                nombre_sala = cursor.fetchall()
+                                cursor.execute("SELECT name_user FROM users WHERE id_user=(?)", [i[4]])
+                                nombre_cliente = cursor.fetchall()
+                                reporte.append(
+                                    [i[0], i[1].strftime('%d/%m/%Y'), nombre_sala[0][0], turnos[i[3]],
+                                     nombre_cliente[0][0], i[5]])
+
+                    except e:
+                        print(e)
+
+                    if reserva:
+                        # leer variable "fechad" para proceder a restar esa fecha con el dia de la consulta
+                        with conexion as conn:
+                            cursor = conn.cursor()
+                            cursor.execute("SELECT fecha FROM reservaciones WHERE folio=(?);", [folio_id])
+                            reserva = cursor.fetchall()
+
+                            fecha_datetime = reserva[0][0]
+
+                        fecha_limite = (fecha_datetime.date() - fecha_hoy).days
+
+                        if fecha_limite >= 3:
+                            print("Una vez eliminada la reserva no se pueden deshacer los cambios.")
+                            print(tabulate(reporte,
+                                           headers=["Folio", "Fecha", "Sala", "Turno", "Cliente", "Nombre Evento"],
+                                           tablefmt='psql', numalign="left"))
+                            while True:
+                                continuar = input("¿Desea continuar con la eliminación de la reserva? (S/N)\n").upper()
+
+                                if continuar == "S":
+                                    with conexion as conn:
+                                        cursor = conn.cursor()
+                                        cursor.execute("DELETE FROM reservaciones WHERE folio=(?);", [folio_id])
+                                        print("Reserva eliminada exitosamente.\n")
+                                        break
+                                elif continuar == "N":
+                                    break
+                                else:
+                                    print("Opcion no valida, intente de nuevo.\n")
+                                    continue
+                        else:
+                            print("Se necesitan 3 dias de anticipacion para cancelar una reserva.\n")
+
+                    else:
+                        print("Folio no existente.\n")
+                else:
+                    print("No hay reservas disponibles.\n")
+
+            elif opcion_reserva == "e":
                 break
 
             else:
@@ -275,23 +458,44 @@ Opción: """).lower()
 
             if opcion_reporte == "a":
 
-                if reservas:
+                try:
+                    with conexion as conn:
+                        cursor = conn.cursor()
+                        cursor.execute("SELECT * FROM reservaciones;")
+                        validacion_reservas = cursor.fetchall()
+                except e:
+                    print(e)
+
+                if validacion_reservas:
 
                     while True:
                         try:
                             fecha_reporte = input("Ingrese la fecha para el reporte (dd/mm/aaaa):\n")
-                            fecha = datetime.datetime.strptime(fecha_reporte, '%d/%m/%Y').date()
+                            fecha_datetime = datetime.datetime.strptime(fecha_reporte, '%d/%m/%Y')
                             break
                         except ValueError:
                             print("Ingrese una fecha valida en el formato dd/mm/aaaa.\n")
                             continue
 
-                    reporte = [[k, v[0], salas[v[1]][0], turnos[v[2]], usuarios[v[3]], v[4]] for k, v in
-                               reservas.items()
-                               if fecha_reporte in v]
+                    try:
+                        with conexion as conn:
+                            cursor = conn.cursor()
+                            cursor.execute("SELECT * FROM reservaciones WHERE fecha=(?)", [fecha_datetime])
+                            reporte = cursor.fetchall()
+                            lista_reporte = []
 
-                    if reporte:
-                        print(tabulate(reporte, headers=["Folio", "Fecha", "Sala", "Turno", "Cliente", "Evento"],
+                            for i in reporte:
+                                cursor.execute("SELECT nombre_sala FROM salas WHERE id_sala=(?)", [i[2]])
+                                nombre_sala = cursor.fetchall()
+                                cursor.execute("SELECT name_user FROM users WHERE id_user=(?)", [i[4]])
+                                nombre_cliente = cursor.fetchall()
+                                lista_reporte.append(
+                                    [i[0], i[1].strftime('%d/%m/%Y'), nombre_sala[0][0], turnos[i[3]], nombre_cliente[0][0], i[5]])
+                    except e:
+                        print(e)
+
+                    if lista_reporte:
+                        print(tabulate(lista_reporte, headers=["Folio", "Fecha", "Sala", "Turno", "Cliente", "Evento"],
                                        tablefmt='psql',
                                        numalign="left"))
                     else:
@@ -302,26 +506,50 @@ Opción: """).lower()
 
             elif opcion_reporte == "b":
 
-                if reservas:
+                try:
+                    with conexion as conn:
+                        cursor = conn.cursor()
+                        cursor.execute("SELECT * FROM reservaciones;")
+                        validacion_reservas = cursor.fetchall()
+                except e:
+                    print(e)
+
+                if validacion_reservas:
 
                     while True:
                         try:
                             fecha_reporte = input("Ingrese la fecha para el reporte (dd/mm/aaaa):\n")
-                            fecha = datetime.datetime.strptime(fecha_reporte, '%d/%m/%Y').date()
+                            fecha_datetime = datetime.datetime.strptime(fecha_reporte, '%d/%m/%Y')
                             break
                         except ValueError:
                             print("Ingrese una fecha valida en el formato dd/mm/aaaa.\n")
                             continue
 
-                    reporte = [[k, v[0], salas[v[1]][0], turnos[v[2]], usuarios[v[3]], v[4]] for k, v in
-                               reservas.items() if fecha_reporte in v]
+                    try:
+                        with conexion as conn:
+                            cursor = conn.cursor()
+                            cursor.execute("SELECT * FROM reservaciones WHERE fecha=(?)", [fecha_datetime])
+                            reporte = cursor.fetchall()
+                            lista_reporte = []
 
-                    if reporte:
-                        df = pd.DataFrame(reporte, columns=["Folio", "Fecha", "Sala", "Horario", "Cliente", "Evento"])
+                            for i in reporte:
+                                cursor.execute("SELECT nombre_sala FROM salas WHERE id_sala=(?)", [i[2]])
+                                nombre_sala = cursor.fetchall()
+                                cursor.execute("SELECT name_user FROM users WHERE id_user=(?)", [i[4]])
+                                nombre_cliente = cursor.fetchall()
+                                lista_reporte.append(
+                                    [i[0], i[1].strftime('%d/%m/%Y'), nombre_sala[0][0], turnos[i[3]], nombre_cliente[0][0], i[5]])
 
-                        writer = pd.ExcelWriter(f"reporte-{fecha_reporte.replace('/', '-')}.xlsx")
-                        df.to_excel(writer)
-                        writer.save()
+                    except e:
+                        print(e)
+
+                    if lista_reporte:
+                        df = pd.DataFrame(lista_reporte,
+                                          columns=["Folio", "Fecha", "Sala", "Horario", "Cliente", "Evento"])
+
+                        with pd.ExcelWriter(f"reporte-{fecha_reporte.replace('/', '-')}.xlsx") as writer:
+                            df.to_excel(writer)
+
                         print(f"Se exporto el reporte como reporte-{fecha_reporte.replace('/', '-')}.xlsx\n")
 
                     else:
@@ -363,9 +591,15 @@ Opción: """).lower()
             except ValueError:
                 print("Ingrese un numero entero.")
 
-        id_sala = max(salas, default=0) + 1
-
-        salas[id_sala] = [nombre_sala, cupo_sala]
+        with conexion as conn:
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO salas(nombre_sala,capacidad_sala) VALUES(?,?);", (nombre_sala, cupo_sala))
+            try:
+                cursor.execute("SELECT max(id_sala) FROM salas")
+                max_id = cursor.fetchall()
+                id_sala = max_id[0][0]
+            except e:
+                id_sala = 1
 
         print(f"\nLa sala '{nombre_sala}' fue registrada con clave '{id_sala}'.\n")
 
@@ -381,9 +615,15 @@ Opción: """).lower()
 
             else:
 
-                id_user = max(usuarios, default=0) + 1
-
-                usuarios[id_user] = nombre_user
+                with conexion as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("INSERT INTO users(name_user) VALUES(?);", [nombre_user])
+                    try:
+                        cursor.execute("SELECT max(id_user) FROM users")
+                        max_id = cursor.fetchall()
+                        id_user = max_id[0][0]
+                    except e:
+                        id_user = 1
 
                 print(f"\nEl usuario '{nombre_user}' fue registrado con la clave '{id_user}'.\n")
                 break
@@ -393,21 +633,3 @@ Opción: """).lower()
 
     else:
         print("Opción no valida.\n")
-
-reporte = [[k, ] + v for k, v in reservas.items()]
-
-with open("reservas.csv", "w", newline="") as file:
-    writer = csv.writer(file)
-    writer.writerows(reporte)
-
-reporte = [[k, ] + v for k, v in salas.items()]
-
-with open("salas.csv", "w", newline="") as file:
-    writer = csv.writer(file)
-    writer.writerows(reporte)
-
-reporte = [[k, v] for k, v in usuarios.items()]
-
-with open("usuarios.csv", "w", newline="") as file:
-    writer = csv.writer(file)
-    writer.writerows(reporte)
