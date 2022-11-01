@@ -11,7 +11,7 @@ conexion = sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
 check = 0
 try:
 
-    if exists("prueba28oct.db"):
+    if exists("reservas.db"):
         check = 1
 
     with conexion as conn:
