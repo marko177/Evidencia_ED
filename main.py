@@ -7,14 +7,17 @@ from sqlite3 import Error
 
 # Se necesita instalar openpyxl para el guardado del reporte en Excel.
 
-conexion = sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
 check = 0
+
+if not exists("reservas.db"):
+    print("\n**\tBase de datos creada.\t**\n")
+
+else:
+    check = 1
+
 try:
 
-    if exists("reservas.db"):
-        check = 1
-
-    with conexion as conn:
+    with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as conn:
         cursor = conn.cursor()
         cursor.execute("""
                         CREATE TABLE IF NOT EXISTS users (
@@ -42,10 +45,9 @@ try:
                             PRIMARY KEY(folio)
                         );
                         """)
+
         if check == 1:
-            print("Se cargo la base de datos con exito.\n")
-        else:
-            print("Se creo la base de datos con exito.\n")
+            print("\n**\tBase de datos cargada.\t**\n")
 
 except Error as e:
     print(e)
@@ -88,7 +90,8 @@ Opción: """).lower()
 
             elif opcion_reserva == "a":
 
-                with conexion as conn:
+                with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) \
+                        as conn:
                     cursor = conn.cursor()
                     cursor.execute("SELECT * FROM salas;")
                     salas = cursor.fetchall()
@@ -124,7 +127,8 @@ Opción: """).lower()
 
                         continue
 
-                with conexion as conn:
+                with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) \
+                        as conn:
                     cursor = conn.cursor()
                     cursor.execute("SELECT * FROM users WHERE id_user=(?);", [user_id])
                     comprobacion_id = cursor.fetchall()
@@ -147,7 +151,8 @@ Opción: """).lower()
 
                     if limite_reserva >= 2:
 
-                        with conexion as conn:
+                        with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                         sqlite3.PARSE_COLNAMES) as conn:
                             cursor = conn.cursor()
                             cursor.execute("SELECT * FROM salas")
                             salas_cursor = cursor.fetchall()
@@ -166,7 +171,8 @@ Opción: """).lower()
                             except ValueError:
                                 continue
 
-                        with conexion as conn:
+                        with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                         sqlite3.PARSE_COLNAMES) as conn:
                             cursor = conn.cursor()
                             cursor.execute("SELECT * FROM salas WHERE id_sala=(?)", [sala_id])
                             consulta_sala = cursor.fetchall()
@@ -197,7 +203,8 @@ Opción: """).lower()
                                     continue
 
                             try:
-                                with conexion as conn:
+                                with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                                 sqlite3.PARSE_COLNAMES) as conn:
                                     datos = fecha_datetime, sala_id, turno
                                     cursor = conn.cursor()
                                     cursor.execute("SELECT * FROM reservaciones WHERE fecha=(?) and sala=(?) and "
@@ -227,7 +234,9 @@ Opción: """).lower()
 
                                         try:
 
-                                            with conexion as conn:
+                                            with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                                             sqlite3.PARSE_COLNAMES) \
+                                                    as conn:
 
                                                 cursor = conn.cursor()
                                                 cursor.execute(
@@ -267,7 +276,8 @@ Opción: """).lower()
             elif opcion_reserva == "b":
 
                 try:
-                    with conexion as conn:
+                    with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) \
+                            as conn:
                         cursor = conn.cursor()
                         cursor.execute("SELECT * FROM reservaciones;")
                         validacion_reservas = cursor.fetchall()
@@ -284,7 +294,8 @@ Opción: """).lower()
                             continue
 
                     try:
-                        with conexion as conn:
+                        with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                         sqlite3.PARSE_COLNAMES) as conn:
                             cursor = conn.cursor()
                             cursor.execute("SELECT * FROM reservaciones WHERE folio=(?)", [folio_mod])
                             consulta_reserva = cursor.fetchall()
@@ -297,7 +308,8 @@ Opción: """).lower()
 
                         datos = folio_mod, nombre_nuevo
                         try:
-                            with conexion as conn:
+                            with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                             sqlite3.PARSE_COLNAMES) as conn:
                                 cursor = conn.cursor()
                                 cursor.execute("SELECT nombre_evento FROM reservaciones WHERE folio=(?);", [folio_mod])
                                 nombre_antiguo = cursor.fetchall()
@@ -325,7 +337,8 @@ Opción: """).lower()
                         continue
 
                 try:
-                    with conexion as conn:
+                    with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                     sqlite3.PARSE_COLNAMES) as conn:
                         cursor = conn.cursor()
                         cursor.execute("SELECT sala, turno FROM reservaciones WHERE fecha=(?)", [fecha_datetime])
                         salas_ocupadas = set(cursor.fetchall())
@@ -346,9 +359,10 @@ Opción: """).lower()
 
                             try:
 
-                                with conexion as conn:
+                                with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                                 sqlite3.PARSE_COLNAMES) as conn:
                                     cursor = conn.cursor()
-                                    cursor.execute("SELECT nombre_sala FROM salas WHERE id_sala = (?)", (id_sala,) )
+                                    cursor.execute("SELECT nombre_sala FROM salas WHERE id_sala = (?)", (id_sala,))
                                     nombre_sala = cursor.fetchall()[0][0]
 
                                     reporte_salas.append([id_sala, nombre_sala, turnos[turno]])
@@ -364,7 +378,8 @@ Opción: """).lower()
             elif opcion_reserva == "d":
 
                 try:
-                    with conexion as conn:
+                    with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) \
+                            as conn:
                         cursor = conn.cursor()
                         cursor.execute("SELECT * FROM reservaciones;")
                         validacion_reservas = cursor.fetchall()
@@ -381,7 +396,8 @@ Opción: """).lower()
                             continue
 
                     try:
-                        with conexion as conn:
+                        with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                         sqlite3.PARSE_COLNAMES) as conn:
                             reporte = []
                             cursor = conn.cursor()
                             cursor.execute("SELECT * FROM reservaciones WHERE folio = (?)", [folio_id])
@@ -400,7 +416,8 @@ Opción: """).lower()
 
                     if reserva:
                         # leer variable "fechad" para proceder a restar esa fecha con el dia de la consulta
-                        with conexion as conn:
+                        with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                         sqlite3.PARSE_COLNAMES) as conn:
                             cursor = conn.cursor()
                             cursor.execute("SELECT fecha FROM reservaciones WHERE folio=(?);", [folio_id])
                             reserva = cursor.fetchall()
@@ -418,7 +435,8 @@ Opción: """).lower()
                                 continuar = input("¿Desea continuar con la eliminación de la reserva? (S/N)\n").upper()
 
                                 if continuar == "S":
-                                    with conexion as conn:
+                                    with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                                     sqlite3.PARSE_COLNAMES) as conn:
                                         cursor = conn.cursor()
                                         cursor.execute("DELETE FROM reservaciones WHERE folio=(?);", [folio_id])
                                         print("Reserva eliminada exitosamente.\n")
@@ -459,7 +477,8 @@ Opción: """).lower()
             if opcion_reporte == "a":
 
                 try:
-                    with conexion as conn:
+                    with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                     sqlite3.PARSE_COLNAMES) as conn:
                         cursor = conn.cursor()
                         cursor.execute("SELECT * FROM reservaciones;")
                         validacion_reservas = cursor.fetchall()
@@ -478,7 +497,8 @@ Opción: """).lower()
                             continue
 
                     try:
-                        with conexion as conn:
+                        with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                         sqlite3.PARSE_COLNAMES) as conn:
                             cursor = conn.cursor()
                             cursor.execute("SELECT * FROM reservaciones WHERE fecha=(?)", [fecha_datetime])
                             reporte = cursor.fetchall()
@@ -490,7 +510,8 @@ Opción: """).lower()
                                 cursor.execute("SELECT name_user FROM users WHERE id_user=(?)", [i[4]])
                                 nombre_cliente = cursor.fetchall()
                                 lista_reporte.append(
-                                    [i[0], i[1].strftime('%d/%m/%Y'), nombre_sala[0][0], turnos[i[3]], nombre_cliente[0][0], i[5]])
+                                    [i[0], i[1].strftime('%d/%m/%Y'), nombre_sala[0][0], turnos[i[3]],
+                                     nombre_cliente[0][0], i[5]])
                     except e:
                         print(e)
 
@@ -507,7 +528,8 @@ Opción: """).lower()
             elif opcion_reporte == "b":
 
                 try:
-                    with conexion as conn:
+                    with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                     sqlite3.PARSE_COLNAMES) as conn:
                         cursor = conn.cursor()
                         cursor.execute("SELECT * FROM reservaciones;")
                         validacion_reservas = cursor.fetchall()
@@ -526,7 +548,8 @@ Opción: """).lower()
                             continue
 
                     try:
-                        with conexion as conn:
+                        with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                         sqlite3.PARSE_COLNAMES) as conn:
                             cursor = conn.cursor()
                             cursor.execute("SELECT * FROM reservaciones WHERE fecha=(?)", [fecha_datetime])
                             reporte = cursor.fetchall()
@@ -538,7 +561,8 @@ Opción: """).lower()
                                 cursor.execute("SELECT name_user FROM users WHERE id_user=(?)", [i[4]])
                                 nombre_cliente = cursor.fetchall()
                                 lista_reporte.append(
-                                    [i[0], i[1].strftime('%d/%m/%Y'), nombre_sala[0][0], turnos[i[3]], nombre_cliente[0][0], i[5]])
+                                    [i[0], i[1].strftime('%d/%m/%Y'), nombre_sala[0][0], turnos[i[3]],
+                                     nombre_cliente[0][0], i[5]])
 
                     except e:
                         print(e)
@@ -553,7 +577,7 @@ Opción: """).lower()
                         print(f"Se exporto el reporte como reporte-{fecha_reporte.replace('/', '-')}.xlsx\n")
 
                     else:
-                        print("No har reservas para esa fecha.\n")
+                        print("No hay reservas para esa fecha.\n")
 
                 else:
                     print("No hay reservas registradas.\n")
@@ -591,7 +615,7 @@ Opción: """).lower()
             except ValueError:
                 print("Ingrese un numero entero.")
 
-        with conexion as conn:
+        with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as conn:
             cursor = conn.cursor()
             cursor.execute("INSERT INTO salas(nombre_sala,capacidad_sala) VALUES(?,?);", (nombre_sala, cupo_sala))
             try:
@@ -615,7 +639,8 @@ Opción: """).lower()
 
             else:
 
-                with conexion as conn:
+                with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) \
+                        as conn:
                     cursor = conn.cursor()
                     cursor.execute("INSERT INTO users(name_user) VALUES(?);", [nombre_user])
                     try:
