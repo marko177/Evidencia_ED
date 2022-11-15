@@ -143,7 +143,7 @@ Opción: """).lower()
                         print("No hay clientes registrados.\n")
                         continue
 
-                    usuarios_reporte = list()
+                    usuarios_reporte = []
 
                     for usuario in usuarios:
                         usuarios_reporte.append([usuario[0], usuario[1]])
@@ -158,7 +158,7 @@ Opción: """).lower()
                             break
                         else:
                             limpiar()
-                            print("fecha no valida, ingrese fecha con dos dias de anticipacion")
+                            print("Fecha no valida, ingrese fecha con dos dias de anticipacion")
                             continue
 
                     except ValueError:
@@ -195,7 +195,6 @@ Opción: """).lower()
                         salas = []
                         for i in salas_cursor:
                             salas.append([i[0], i[1], i[2]])
-                    # print(tabulate(salas, headers=["Clave", "Sala", "Cupo"], tablefmt='psql', numalign="left"))
 
                     while True:
 
@@ -514,6 +513,7 @@ Opción: """).lower()
 
                 else:
                     print("No hay salas registradas.\n")
+
             elif opcion_reserva == "d":
 
                 try:
@@ -737,7 +737,7 @@ Opción: """).lower()
                             for i in reporte:
                                 cursor.execute("SELECT nombre_sala FROM salas WHERE id_sala=(?)", [i[2]])
                                 nombre_sala = cursor.fetchall()
-                                cursor.execute("SELECT nombre_turno FROM turnos WHERE id_turno = (?)", (id_turno,))
+                                cursor.execute("SELECT nombre_turno FROM turnos WHERE id_turno = (?)", (i[0],))
                                 nombre_turno = cursor.fetchall()
                                 cursor.execute("SELECT name_user FROM users WHERE id_user=(?)", [i[4]])
                                 nombre_cliente = cursor.fetchall()
