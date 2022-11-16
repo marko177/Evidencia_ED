@@ -737,7 +737,7 @@ Opción: """).lower()
                             for i in reporte:
                                 cursor.execute("SELECT nombre_sala FROM salas WHERE id_sala=(?)", [i[2]])
                                 nombre_sala = cursor.fetchall()
-                                cursor.execute("SELECT nombre_turno FROM turnos WHERE id_turno = (?)", (i[0],))
+                                cursor.execute("SELECT nombre_turno FROM turnos WHERE id_turno = (?)", (i[3],))
                                 nombre_turno = cursor.fetchall()
                                 cursor.execute("SELECT name_user FROM users WHERE id_user=(?)", [i[4]])
                                 nombre_cliente = cursor.fetchall()
