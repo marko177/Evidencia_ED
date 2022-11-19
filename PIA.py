@@ -7,7 +7,7 @@ import sqlite3
 from sqlite3 import Error
 
 
-def limpiar():
+def clear():
     os.system("cls")
 
 
@@ -25,52 +25,52 @@ try:
     with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as conn:
         cursor = conn.cursor()
         cursor.execute("""
-                        CREATE TABLE IF NOT EXISTS users (
-                            id_user INTEGER,
-                            name_user TEXT NOT NULL,
-                            PRIMARY KEY(id_user)
+                        CREATE TABLE IF NOT EXISTS Customers (
+                            CustomerID INTEGER,
+                            Customer_Name TEXT NOT NULL,
+                            PRIMARY KEY(CustomerID)
                         );
                         """)
-        cursor.execute("""CREATE TABLE IF NOT EXISTS salas (
-                            id_sala INTEGER,
-                            nombre_sala TEXT NOT NULL,
-                            capacidad_sala INTEGER NOT NULL,
-                            PRIMARY KEY(id_sala)
+        cursor.execute("""CREATE TABLE IF NOT EXISTS Rooms (
+                            RoomID INTEGER,
+                            Room_name TEXT NOT NULL,
+                            RoomCap INTEGER NOT NULL,
+                            PRIMARY KEY(RoomID)
                         );
                         """)
         cursor.execute("""
-                        CREATE TABLE IF NOT EXISTS turnos (
-                            id_turno INTEGER,
-                            nombre_turno TEXT UNIQUE,
-                            PRIMARY KEY(id_turno)
+                        CREATE TABLE IF NOT EXISTS Slots (
+                            SlotID INTEGER,
+                            Slot_name TEXT UNIQUE,
+                            PRIMARY KEY(SlotID)
                         );
                         """)
 
-        cursor.execute("""CREATE TABLE IF NOT EXISTS reservaciones (
-                            folio INTEGER,
-                            fecha timestamp NOT NULL,
-                            sala INTEGER NOT NULL,
-                            turno INTEGER NOT NULL,
-                            cliente INTEGER NOT NULL,
-                            nombre_evento TEXT NOT NULL,
-                            FOREIGN KEY(sala) REFERENCES salas(id_sala),
-                            FOREIGN KEY(cliente) REFERENCES users(id_user),
-                            FOREIGN KEY(turno) REFERENCES turnos(id_turno),
-                            PRIMARY KEY(folio)
+        cursor.execute("""CREATE TABLE IF NOT EXISTS Bookings (
+                            BookingID INTEGER,
+                            Date timestamp NOT NULL,
+                            RoomID INTEGER NOT NULL,
+                            SlotID INTEGER NOT NULL,
+                            CustomerID INTEGER NOT NULL,
+                            Event_name TEXT NOT NULL,
+                            FOREIGN KEY(RoomID) REFERENCES Rooms(RoomID),
+                            FOREIGN KEY(CustomerID) REFERENCES Customers(CustomerID),
+                            FOREIGN KEY(SlotID) REFERENCES Slots(SlotID),
+                            PRIMARY KEY(BookingID)
                         );
                         """)
 
         if check == 0:
             cursor.execute("""
-                            INSERT INTO turnos VALUES(1,"Matutino");
+                            INSERT INTO Slots VALUES(1,"Matutino");
                             """)
 
             cursor.execute("""
-                            INSERT INTO turnos VALUES(2,"Vespertino");
+                            INSERT INTO Slots VALUES(2,"Vespertino");
                             """)
 
             cursor.execute("""
-                            INSERT INTO turnos VALUES(3, "Nocturno");
+                            INSERT INTO Slots VALUES(3, "Nocturno");
                             """)
 
         else:
@@ -90,19 +90,19 @@ while True:
 |-------+--------------------------------|
 |   a)  | Reservaciones                  |
 |   b)  | Reportes                       |
-|   c)  | Alta de salas                  |
+|   c)  | Alta de Rooms                  |
 |   d)  | Alta de clientes               |
 |   e)  | Salir                          |
 +-------+--------------------------------+
 Opción: """).lower()
 
-    limpiar()
+    clear()
 
     if opcion == "a":
 
         while True:
             opcion_reserva = input("""+-------+--------------------------------------------+
-|              MENÚ DE RESERVACIONES:                |
+|              MENÚ DE Reservaciones:                |
 |-------+--------------------------------------------|
 |   a)  | Registrar una nueva reservación            |
 |   b)  | Modificar descripción de una reservación   |
@@ -112,41 +112,36 @@ Opción: """).lower()
 +-------+--------------------------------------------+
 Opción: """).lower()
 
-            limpiar()
+            clear()
 
-            if opcion_reserva == "":
-                limpiar()
+            if opcion_reserva == "" or opcion_reserva.isspace():
+                clear()
                 print("No se puede dejar la opción vacía.\n")
                 continue
 
             elif opcion_reserva == "a":
 
-                limpiar()
+                clear()
                 with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) \
                         as conn:
                     cursor = conn.cursor()
-                    cursor.execute("SELECT * FROM salas;")
-                    salas = cursor.fetchall()
-                    if salas:
+                    cursor.execute("SELECT * FROM Rooms;")
+                    rooms = cursor.fetchall()
+                    if rooms:
                         pass
                     else:
-                        limpiar()
+                        clear()
                         print("No hay salas registradas.\n")
                         continue
-                    cursor.execute("SELECT * FROM users;")
+                    cursor.execute("SELECT * FROM Customers;")
+                    customers = cursor.fetchall()
 
-                    usuarios = cursor.fetchall()
-                    if usuarios:
+                    if customers:
                         pass
                     else:
-                        limpiar()
+                        clear()
                         print("No hay clientes registrados.\n")
                         continue
-
-                    usuarios_reporte = []
-
-                    for usuario in usuarios:
-                        usuarios_reporte.append([usuario[0], usuario[1]])
 
                 while True:
                     try:
@@ -154,198 +149,203 @@ Opción: """).lower()
                         fecha_datetime = datetime.datetime.strptime(fecha_reserva, '%d/%m/%Y')
                         limite_reserva = (fecha_datetime.date() - fecha_hoy).days
                         if limite_reserva >= 2:
-                            limpiar()
+                            clear()
                             break
                         else:
-                            limpiar()
-                            print("Fecha no valida, ingrese fecha con dos dias de anticipacion")
+                            clear()
+                            print("Fecha invalida, ingrese una fecha con dos dias de anticipación.")
                             continue
 
                     except ValueError:
-                        limpiar()
+                        clear()
                         print("Ingrese una fecha valida.\n")
                         continue
 
-                print(tabulate(usuarios_reporte, headers=["Clave", "Nombre"], tablefmt='psql', showindex=False))
-
                 while True:
+
+                    customers_report = [[customer_id, customer_name] for customer_id, customer_name in customers]
+                    print(tabulate(customers_report, headers=["Clave", "Nombre"], tablefmt='psql', showindex=False))
+
                     try:
-                        user_id = int(input("Ingrese su clave de usuario:\n"))
+                        customer_id = int(input("Ingrese su clave de usuario:\n"))
+
                         break
                     except ValueError:
-                        limpiar()
+                        clear()
                         print("Ingrese una clave valida.\n")
                         continue
 
                 with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) \
                         as conn:
                     cursor = conn.cursor()
-                    cursor.execute("SELECT * FROM users WHERE id_user=(?);", [user_id])
-                    comprobacion_id = cursor.fetchall()
+                    cursor.execute("SELECT * FROM Customers WHERE CustomerID=(?);", [customer_id])
+                    customer_check = cursor.fetchall()
 
-                if comprobacion_id:
+                if customer_check:
 
-                    limpiar()
-                    with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
-                                                                     sqlite3.PARSE_COLNAMES) as conn:
+                    clear()
 
-                        cursor = conn.cursor()
-                        cursor.execute("SELECT * FROM salas")
-                        salas_cursor = cursor.fetchall()
-                        salas = []
-                        for i in salas_cursor:
-                            salas.append([i[0], i[1], i[2]])
+                    rooms_report = [[room_id, room_name, room_cap] for room_id, room_name, room_cap in rooms]
 
                     while True:
 
-                        print(tabulate(salas, headers=["Clave", "Sala", "Cupo"], tablefmt='psql', numalign="left"))
+                        print(tabulate(rooms_report, headers=["Clave", "Sala", "Cupo"],
+                                       tablefmt='psql', numalign="left"))
 
                         try:
 
-                            sala_id = int(input("Ingrese la clave de la sala:\n"))
-                            limpiar()
+                            room_id = int(input("Ingrese la clave de la sala:\n"))
+                            clear()
                             break
 
                         except ValueError:
-                            limpiar()
+                            clear()
                             print("Ingrese una clave valida.\n")
                             continue
 
                     with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
                                                                      sqlite3.PARSE_COLNAMES) as conn:
                         cursor = conn.cursor()
-                        cursor.execute("SELECT * FROM salas WHERE id_sala=(?)", [sala_id])
-                        consulta_sala = cursor.fetchall()
+                        cursor.execute("SELECT * FROM Rooms WHERE RoomID=(?)", [room_id])
+                        room_check = cursor.fetchall()
 
-                    if consulta_sala:
+                    if room_check:
 
                         while True:
 
-                            turno = input("""+------------------------------------+
-| Ingrese el horario del evento:     |
-|-------+----------------------------|
-|   a)  | Matutino                   |
-|   b)  | Vespertino                 |
-|   c)  | Nocturno                   |
-+-------+----------------------------+
-Opción: """).lower()
-                            if turno == "a":
-                                limpiar()
-                                turno_id = 1
+                            with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                             sqlite3.PARSE_COLNAMES) as conn:
+                                cursor = conn.cursor()
+                                cursor.execute("SELECT * FROM Slots")
+                                slots = cursor.fetchall()
+                                slots_report = [[slot_id, slot_name] for slot_id, slot_name in slots]
 
-                            elif turno == "b":
-                                limpiar()
-                                turno_id = 2
+                            while True:
 
-                            elif turno == "c":
-                                limpiar()
-                                turno_id = 3
+                                print(tabulate(slots_report, headers=["Clave", "Nombre"], tablefmt='psql',
+                                               showindex=False))
 
-                            else:
-                                limpiar()
-                                print("Opción no valida.")
-                                continue
+                                try:
+
+                                    slot_id = int(input("Ingrese la clave del turno:\n"))
+                                    clear()
+                                    break
+
+                                except ValueError:
+                                    clear()
+                                    print("Ingrese una clave valida.\n")
+                                    continue
 
                             try:
                                 with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
                                                                                  sqlite3.PARSE_COLNAMES) as conn:
-                                    datos = fecha_datetime, sala_id, turno_id
                                     cursor = conn.cursor()
-                                    cursor.execute("SELECT * FROM reservaciones WHERE fecha=(?) and sala=(?) and "
-                                                   "turno=(?)", datos)
-
-                                    consulta = cursor.fetchall()
-
-                            except e:
+                                    cursor.execute("SELECT * FROM Slots WHERE SlotID=(?)", [slot_id])
+                                    slot_check = cursor.fetchall()
+                            except Error as e:
                                 print(e)
 
-                            if consulta:
+                            if slot_check:
 
-                                while True:
+                                try:
+                                    with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                                     sqlite3.PARSE_COLNAMES) as conn:
+                                        datos = fecha_datetime, room_id, slot_id
+                                        cursor = conn.cursor()
+                                        cursor.execute("SELECT * FROM Bookings WHERE Date=(?) and RoomID=(?) and "
+                                                       "SlotID=(?)", datos)
 
-                                    try:
-                                        respuesta = int(input("Horario ocupado, ¿Desea intentar con otro turno? ("
-                                                              "\"1\" para continuar / \"0\" para cancelar la "
-                                                              "reservacion):\n"))
-                                        break
-                                    except:
-                                        limpiar()
-                                        print("Opcion incorrecta, intente de nuevo.")
+                                        booking_check = cursor.fetchall()
+
+                                except e:
+                                    print(e)
+
+                                if booking_check:
+
+                                    respuesta = input("""Horario ocupado, ¿Desea intentar con otro turno?
++-------+--------+
+| Clave | Opción |
+|-------+--------|
+|   1   |   Si   |
+|   2   |   No   |
++-------+--------+
+Opción: """)
+                                    if respuesta == "1":
+                                        clear()
                                         continue
-                                if respuesta == 1:
-                                    limpiar()
-                                    continue
 
-                                elif respuesta == 0:
-                                    limpiar()
+                                    elif respuesta == "2":
+                                        clear()
+                                        break
+
+                                else:
+
+                                    while True:
+
+                                        event_name = input("Ingrese el nombre del evento:\n")
+
+                                        clear()
+                                        if event_name == "" or event_name.isspace():
+                                            clear()
+                                            print("El nombre no puede quedar vació.\n")
+                                            continue
+
+                                        else:
+
+                                            try:
+
+                                                with sqlite3.connect("reservas.db",
+                                                                     detect_types=sqlite3.PARSE_DECLTYPES |
+                                                                                  sqlite3.PARSE_COLNAMES) as conn:
+
+                                                    cursor = conn.cursor()
+                                                    cursor.execute(
+                                                        "INSERT INTO Bookings(Date,RoomID,SlotID,CustomerID,Event_name)"
+                                                        "VALUES(?, ?, ?, ?, ?)",
+                                                        (fecha_datetime, room_id, slot_id, customer_id, event_name))
+                                                    cursor.execute("SELECT last_insert_rowid()")
+                                                    folio = cursor.fetchone()[0]
+
+                                                    cursor.execute("""
+                                                    SELECT Bookings.BookingID, Bookings.Date, Rooms.Room_name, 
+                                                    Slots.Slot_name, Customers.Customer_Name, Bookings.Event_name 
+                                                    FROM (((Bookings 
+                                                    INNER JOIN Rooms on Bookings.RoomID = Rooms.RoomID)
+                                                    INNER JOIN Slots on Bookings.SlotID = Slots.SlotID)
+                                                    INNER JOIN Customers on Bookings.CustomerID = Customers.CustomerID)
+                                                    WHERE BookingID=(?) """, [folio])
+
+                                                    reserva = cursor.fetchone()
+
+                                                    print(tabulate([[reserva[0], reserva[1].strftime('%d/%m/%Y'),
+                                                                     reserva[2], reserva[3], reserva[4], reserva[5]]],
+                                                                   headers=["Folio", "Fecha", "Sala", "Turno",
+                                                                            "Cliente", "Evento"], tablefmt='psql',
+                                                                   numalign="left"))
+
+                                            except Error as e:
+                                                print(e)
+
+                                            break
                                     break
-
                             else:
-
-                                while True:
-
-                                    nombre_evento = input("Ingrese el nombre del evento:\n")
-
-                                    limpiar()
-                                    if nombre_evento == "":
-                                        limpiar()
-                                        print("El nombre no puede quedar vació.\n")
-                                        continue
-
-                                    else:
-
-                                        try:
-
-                                            with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
-                                                                                             sqlite3.PARSE_COLNAMES) \
-                                                    as conn:
-
-                                                cursor = conn.cursor()
-                                                cursor.execute(
-                                                    "INSERT INTO reservaciones(fecha,sala,turno,cliente,nombre_evento)"
-                                                    "VALUES(?, ?, ?, ?, ?)",
-                                                    (fecha_datetime, sala_id, turno_id, user_id, nombre_evento))
-                                                cursor.execute("SELECT nombre_sala FROM salas WHERE id_sala=(?)",
-                                                               [sala_id])
-                                                nombre_sala = cursor.fetchall()
-                                                cursor.execute("SELECT name_user FROM users WHERE id_user=(?)",
-                                                               [user_id])
-                                                nombre_usuario = cursor.fetchall()
-                                                cursor.execute("SELECT folio FROM reservaciones WHERE (fecha, sala, "
-                                                               "turno) = (?, ?, ?)",
-                                                               (fecha_datetime, sala_id, turno_id,))
-                                                folio = cursor.fetchall()[0][0]
-                                                cursor.execute("SELECT nombre_turno FROM turnos WHERE id_turno=(?)",
-                                                               [turno_id])
-                                                nombre_turno = cursor.fetchall()
-
-                                                print(tabulate([[folio, fecha_reserva, nombre_sala[0][0],
-                                                                 nombre_turno[0][0], nombre_usuario[0][0],
-                                                                 nombre_evento]],
-                                                               headers=["Folio", "Fecha", "Sala", "Turno", "Cliente",
-                                                                        "Evento"], tablefmt='psql', numalign="left"))
-
-                                        except Error as e:
-                                            print(e)
-
-                                        break
-                                break
+                                clear()
+                                print("Turno no registrado")
                     else:
-                        limpiar()
+                        clear()
                         print("Sala no registrada.\n")
-
                 else:
-                    limpiar()
+                    clear()
                     print("Usuario no registrado.\n")
 
             elif opcion_reserva == "b":
 
-                limpiar()
+                clear()
                 try:
                     with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) \
                             as conn:
                         cursor = conn.cursor()
-                        cursor.execute("SELECT * FROM reservaciones;")
+                        cursor.execute("SELECT * FROM Bookings;")
                         validacion_reservas = cursor.fetchall()
                 except Error as e:
                     print(e)
@@ -356,35 +356,32 @@ Opción: """).lower()
                         with sqlite3.connect("reservas.db",
                                              detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) \
                                 as conn:
-                            reporte = []
                             cursor = conn.cursor()
-                            cursor.execute("SELECT * FROM reservaciones")
-                            reserva = cursor.fetchall()
-                            for i in reserva:
-                                cursor.execute("SELECT nombre_sala FROM salas WHERE id_sala=(?)", [i[2]])
-                                nombre_sala = cursor.fetchall()
-                                cursor.execute("SELECT nombre_turno FROM turnos WHERE id_turno=(?)", [i[3]])
-                                nombre_turno = cursor.fetchall()
-                                cursor.execute("SELECT name_user FROM users WHERE id_user=(?)", [i[4]])
-                                nombre_cliente = cursor.fetchall()
-                                reporte.append(
-                                    [i[0], i[1].strftime('%d/%m/%Y'), nombre_sala[0][0], nombre_turno[0][0],
-                                     nombre_cliente[0][0], i[5]])
+                            cursor.execute("""
+                             SELECT Bookings.BookingID, Bookings.Date, Rooms.Room_name, 
+                             Slots.Slot_name, Customers.Customer_Name, Bookings.Event_name 
+                             FROM (((Bookings 
+                             INNER JOIN Rooms on Bookings.RoomID = Rooms.RoomID)
+                             INNER JOIN Slots on Bookings.SlotID = Slots.SlotID)
+                             INNER JOIN Customers on Bookings.CustomerID = Customers.CustomerID)""")
+                            reporte = cursor.fetchall()
+                            lista_reporte = [[booking_id, date.strftime('%d/%m/%Y'), room, slot, user, event_name]
+                                             for booking_id, date, room, slot, user, event_name in reporte]
 
-                            print(tabulate(reporte, headers=["Folio", "Fecha", "Sala", "Turno", "Cliente",
-                                                             "Nombre Evento"], tablefmt='psql', numalign="left"))
+                            print(tabulate(lista_reporte, headers=["Folio", "Fecha", "Sala", "Turno", "Cliente",
+                                                                   "Evento"], tablefmt='psql', numalign="left"))
                     except Error as e:
                         print(e)
 
                     while True:
 
                         try:
-                            folio_mod = int(input("Ingrese el folio de la reserva (Se necesitan 3 dias de anticipacion "
-                                                  "para modificar.):\n"))
-                            limpiar()
+                            folio_mod = int(
+                                input("Ingrese el folio de la reserva a modificar:\n"))
+                            clear()
                             break
                         except ValueError:
-                            limpiar()
+                            clear()
                             print("Ingrese un folio valido.\n")
                             continue
 
@@ -392,55 +389,40 @@ Opción: """).lower()
                         with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
                                                                          sqlite3.PARSE_COLNAMES) as conn:
                             cursor = conn.cursor()
-                            cursor.execute("SELECT * FROM reservaciones WHERE folio=(?)", [folio_mod])
-                            consulta_reserva = cursor.fetchall()
+                            cursor.execute("SELECT * FROM Bookings WHERE BookingID=(?)", [folio_mod])
+                            booking_check = cursor.fetchone()
                     except Error as e:
                         print(e)
 
-                    if consulta_reserva:
+                    if booking_check:
+
+                        while True:
+
+                            nombre_nuevo = input("Ingrese el nuevo nombre del evento:\n")
+                            clear()
+                            if nombre_nuevo == "" or nombre_nuevo.isspace():
+                                clear()
+                                print("Nombre invalido, intente de nuevo.")
+                                continue
+                            else:
+                                break
+                        datos = nombre_nuevo, folio_mod
 
                         try:
                             with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
-                                                                             sqlite3.PARSE_COLNAMES) as conn:
+                                                                             sqlite3.PARSE_COLNAMES) \
+                                    as conn:
                                 cursor = conn.cursor()
-                                cursor.execute("SELECT nombre_evento, fecha FROM reservaciones WHERE folio=(?);",
-                                               [folio_mod])
-                                reserva = cursor.fetchall()
-                                nombre_antiguo = reserva[0][0]
-                                fecha_datetime = reserva[0][1]
-
-                                fecha_limite = (fecha_datetime.date() - fecha_hoy).days
-
-                                if fecha_limite >= 3:
-
-                                    print(f"El evento que desea cambiar tiene actualmente el nombre: "
-                                          f"\"{nombre_antiguo}\"\n")
-
-                                    while True:
-                                        nombre_nuevo = input("Ingrese el nuevo nombre del evento:\n")
-                                        limpiar()
-                                        if nombre_nuevo == "":
-                                            limpiar()
-                                            print("Nombre no valido, intente de nuevo.")
-                                            continue
-                                        else:
-                                            break
-                                    datos = nombre_nuevo, folio_mod
-                                    cursor.execute("UPDATE reservaciones SET nombre_evento=(?) WHERE folio=(?);", datos)
-                                else:
-                                    limpiar()
-                                    print("Se necesitan 3 dias de anticipacion para modificar una reserva.\n")
-                                    break
+                                cursor.execute("UPDATE Bookings SET Event_name=(?) WHERE BookingID=(?);", datos)
                         except Error as e:
                             print(e)
-
-                        print(f"El evento \"{nombre_antiguo}\" fue modificado a \"{nombre_nuevo}\" con éxito.\n")
+                        print(f"El evento \"{booking_check[5]}\" fue modificado a \"{nombre_nuevo}\" con éxito.\n")
 
                     else:
-                        limpiar()
-                        print("Folio invalido.\n")
+                        clear()
+                        print("No hay reservas con ese folio.\n")
                 else:
-                    limpiar()
+                    clear()
                     print("No hay reservas registradas.\n")
 
             elif opcion_reserva == "c":
@@ -449,7 +431,7 @@ Opción: """).lower()
                     with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) \
                             as conn:
                         cursor = conn.cursor()
-                        cursor.execute("SELECT * FROM salas;")
+                        cursor.execute("SELECT * FROM Rooms;")
                         validacion_salas = cursor.fetchall()
                 except Error as e:
                     print(e)
@@ -458,30 +440,30 @@ Opción: """).lower()
 
                     while True:
                         try:
-                            fecha_reporte = input("Ingrese la fecha para la disponibilidad (dd/mm/aaaa):\n")
+                            fecha_reporte = input("Ingrese la Date para la disponibilidad (dd/mm/aaaa):\n")
                             fecha_datetime = datetime.datetime.strptime(fecha_reporte, '%d/%m/%Y')
-                            limpiar()
+                            clear()
                             break
                         except ValueError:
-                            limpiar()
-                            print("Ingrese una fecha valida en el formato dd/mm/aaaa.\n")
+                            clear()
+                            print("Ingrese una Date valida en el formato dd/mm/aaaa.\n")
                             continue
 
                     try:
                         with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
                                                                          sqlite3.PARSE_COLNAMES) as conn:
                             cursor = conn.cursor()
-                            cursor.execute("SELECT sala, turno FROM reservaciones WHERE fecha=(?)", [fecha_datetime])
+                            cursor.execute("SELECT RoomID, SlotID FROM Bookings WHERE Date=(?)", [fecha_datetime])
                             salas_ocupadas = set(cursor.fetchall())
 
-                            cursor.execute("SELECT id_sala FROM salas")
+                            cursor.execute("SELECT RoomID FROM Rooms")
                             salas_creadas = cursor.fetchall()
-                            cursor.execute("SELECT id_turno FROM turnos")
+                            cursor.execute("SELECT SlotID FROM Slots")
                             turnos_creados = cursor.fetchall()
                             salas_posibles = []
                             for sala in salas_creadas:
-                                for turno in turnos_creados:
-                                    salas_posibles.append((sala[0], turno[0]))
+                                for slot in turnos_creados:
+                                    salas_posibles.append((sala[0], slot[0]))
                             salas_posibles = set(salas_posibles)
 
                             salas_disponibles = salas_posibles - salas_ocupadas
@@ -495,24 +477,25 @@ Opción: """).lower()
                                     with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
                                                                                      sqlite3.PARSE_COLNAMES) as conn:
                                         cursor = conn.cursor()
-                                        cursor.execute("SELECT nombre_sala FROM salas WHERE id_sala = (?)", (id_sala,))
-                                        nombre_sala = cursor.fetchall()[0][0]
-                                        cursor.execute("SELECT nombre_turno FROM turnos WHERE id_turno = (?)",
+                                        cursor.execute("SELECT Room_name FROM Rooms WHERE RoomID = (?)", (id_sala,))
+                                        room_name = cursor.fetchall()[0][0]
+                                        cursor.execute("SELECT Slot_name FROM Slots WHERE SlotID = (?)",
                                                        (id_turno,))
                                         nombre_turno = cursor.fetchall()[0][0]
 
-                                        reporte_salas.append([id_sala, nombre_sala, nombre_turno])
+                                        reporte_salas.append([id_sala, room_name, nombre_turno])
 
                                 except Error as e:
                                     print(e)
 
-                            print(tabulate(sorted(reporte_salas), tablefmt="psql", headers=["Clave", "Sala", "Turno"]))
+                            print(
+                                tabulate(sorted(reporte_salas), tablefmt="psql", headers=["Clave", "Sala", "Turno"]))
 
                     except Error as e:
                         print(e)
 
                 else:
-                    print("No hay salas registradas.\n")
+                    print("No hay Rooms registradas.\n")
 
             elif opcion_reserva == "d":
 
@@ -520,7 +503,7 @@ Opción: """).lower()
                     with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) \
                             as conn:
                         cursor = conn.cursor()
-                        cursor.execute("SELECT * FROM reservaciones;")
+                        cursor.execute("SELECT * FROM Bookings;")
                         validacion_reservas = cursor.fetchall()
                 except Error as e:
                     print(e)
@@ -532,32 +515,30 @@ Opción: """).lower()
                             with sqlite3.connect("reservas.db",
                                                  detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) \
                                     as conn:
-                                reporte = []
                                 cursor = conn.cursor()
-                                cursor.execute("SELECT * FROM reservaciones")
-                                reserva = cursor.fetchall()
-                                for i in reserva:
-                                    cursor.execute("SELECT nombre_sala FROM salas WHERE id_sala=(?)", [i[2]])
-                                    nombre_sala = cursor.fetchall()
-                                    cursor.execute("SELECT nombre_turno FROM turnos WHERE id_turno=(?)", [i[3]])
-                                    nombre_turno = cursor.fetchall()
-                                    cursor.execute("SELECT name_user FROM users WHERE id_user=(?)", [i[4]])
-                                    nombre_cliente = cursor.fetchall()
-                                    reporte.append(
-                                        [i[0], i[1].strftime('%d/%m/%Y'), nombre_sala[0][0], nombre_turno[0][0],
-                                         nombre_cliente[0][0], i[5]])
+                                cursor.execute("""
+                                SELECT Bookings.BookingID, Bookings.Date, Rooms.Room_name, 
+                                Slots.Slot_name, Customers.Customer_Name, Bookings.Event_name 
+                                FROM (((Bookings 
+                                INNER JOIN Rooms on Bookings.RoomID = Rooms.RoomID)
+                                INNER JOIN Slots on Bookings.SlotID = Slots.SlotID)
+                                INNER JOIN Customers on Bookings.CustomerID = Customers.CustomerID)""",)
+                                reporte = cursor.fetchall()
+                                lista_reporte = [[booking_id, date.strftime('%d/%m/%Y'), room, slot, user, event_name]
+                                                 for booking_id, date, room, slot, user, event_name in reporte]
 
-                                print(tabulate(reporte, headers=["Folio", "Fecha", "Sala", "Turno", "Cliente",
-                                                                 "Nombre Evento"], tablefmt='psql', numalign="left"))
+                                print(tabulate(lista_reporte, headers=["Folio", "Fecha", "Sala", "Turno", "Cliente",
+                                                                       "Evento"], tablefmt='psql', numalign="left"))
 
                         except Error as e:
                             print(e)
                         try:
-                            folio_id = int(input("Ingrese el folio de la reserva (Se necesitan 3 dias de anticipacion "
-                                                 "para cancelar):\n"))
+                            folio_id = int(
+                                input("Ingrese el BookingID de la reserva (Se necesitan 3 dias de anticipacion "
+                                      "para cancelar):\n"))
                             break
                         except ValueError:
-                            print("Ingrese un folio valido.\n")
+                            print("Ingrese un BookingID valido.\n")
                             continue
 
                     try:
@@ -565,17 +546,17 @@ Opción: """).lower()
                                                                          sqlite3.PARSE_COLNAMES) as conn:
                             reporte = []
                             cursor = conn.cursor()
-                            cursor.execute("SELECT * FROM reservaciones WHERE folio = (?)", [folio_id])
+                            cursor.execute("SELECT * FROM Bookings WHERE BookingID = (?)", [folio_id])
                             reserva = cursor.fetchall()
                             for i in reserva:
-                                cursor.execute("SELECT nombre_sala FROM salas WHERE id_sala=(?)", [i[2]])
-                                nombre_sala = cursor.fetchall()
-                                cursor.execute("SELECT nombre_turno FROM turnos WHERE id_turno=(?)", [i[3]])
+                                cursor.execute("SELECT Room_name FROM Rooms WHERE RoomID=(?)", [i[2]])
+                                room_name = cursor.fetchall()
+                                cursor.execute("SELECT Slot_name FROM Slots WHERE SlotID=(?)", [i[3]])
                                 nombre_turno = cursor.fetchall()
-                                cursor.execute("SELECT name_user FROM users WHERE id_user=(?)", [i[4]])
+                                cursor.execute("SELECT Customer_Name FROM Customers WHERE CustomerID=(?)", [i[4]])
                                 nombre_cliente = cursor.fetchall()
                                 reporte.append(
-                                    [i[0], i[1].strftime('%d/%m/%Y'), nombre_sala[0][0], nombre_turno[0][0],
+                                    [i[0], i[1].strftime('%d/%m/%Y'), room_name[0][0], nombre_turno[0][0],
                                      nombre_cliente[0][0], i[5]])
 
                     except Error as e:
@@ -586,7 +567,7 @@ Opción: """).lower()
                         with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
                                                                          sqlite3.PARSE_COLNAMES) as conn:
                             cursor = conn.cursor()
-                            cursor.execute("SELECT fecha FROM reservaciones WHERE folio=(?);", [folio_id])
+                            cursor.execute("SELECT Date FROM Bookings WHERE BookingID=(?);", [folio_id])
                             reserva = cursor.fetchall()
 
                             fecha_datetime = reserva[0][0]
@@ -599,33 +580,33 @@ Opción: """).lower()
                                                              "Nombre Evento"], tablefmt='psql', numalign="left"))
                             while True:
                                 continuar = input("¿Desea continuar con la eliminación de la reserva? (S/N)\n").upper()
-                                limpiar()
+                                clear()
                                 if continuar == "S":
                                     with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
                                                                                      sqlite3.PARSE_COLNAMES) as conn:
                                         cursor = conn.cursor()
-                                        cursor.execute("DELETE FROM reservaciones WHERE folio=(?);", [folio_id])
+                                        cursor.execute("DELETE FROM Bookings WHERE BookingID=(?);", [folio_id])
                                         print("Reserva eliminada exitosamente.\n")
                                         break
                                 elif continuar == "N":
                                     break
                                 else:
-                                    limpiar()
+                                    clear()
                                     print("Opcion no valida, intente de nuevo.\n")
                                     continue
                         else:
-                            limpiar()
+                            clear()
                             print("Se necesitan 3 dias de anticipacion para cancelar una reserva.\n")
 
                     else:
-                        limpiar()
-                        print("Folio no existente.\n")
+                        clear()
+                        print("BookingID no existente.\n")
                 else:
-                    limpiar()
+                    clear()
                     print("No hay reservas disponibles.\n")
 
             elif opcion_reserva == "e":
-                limpiar()
+                clear()
                 break
 
             else:
@@ -645,14 +626,14 @@ Opción: """).lower()
 +-------+----------------------------+
 Opción: """).lower()
 
-            limpiar()
+            clear()
             if opcion_reporte == "a":
 
                 try:
                     with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
                                                                      sqlite3.PARSE_COLNAMES) as conn:
                         cursor = conn.cursor()
-                        cursor.execute("SELECT * FROM reservaciones;")
+                        cursor.execute("SELECT * FROM Bookings;")
                         validacion_reservas = cursor.fetchall()
                 except Error as e:
                     print(e)
@@ -661,39 +642,36 @@ Opción: """).lower()
 
                     while True:
                         try:
-                            fecha_reporte = input("Ingrese la fecha para el reporte (dd/mm/aaaa):\n")
+                            fecha_reporte = input("Ingrese la Date para el reporte (dd/mm/aaaa):\n")
                             fecha_datetime = datetime.datetime.strptime(fecha_reporte, '%d/%m/%Y')
-                            limpiar()
+                            clear()
                             break
                         except ValueError:
-                            limpiar()
-                            print("Ingrese una fecha valida en el formato dd/mm/aaaa.\n")
+                            clear()
+                            print("Ingrese una Date valida en el formato dd/mm/aaaa.\n")
                             continue
 
                     try:
                         with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
                                                                          sqlite3.PARSE_COLNAMES) as conn:
                             cursor = conn.cursor()
-                            cursor.execute("SELECT * FROM reservaciones WHERE fecha=(?)", [fecha_datetime])
+                            cursor.execute("""
+                            SELECT Bookings.BookingID, Bookings.Date, Rooms.Room_name, 
+                            Slots.Slot_name, Customers.Customer_Name, Bookings.Event_name 
+                            FROM (((Bookings 
+                            INNER JOIN Rooms on Bookings.RoomID = Rooms.RoomID)
+                            INNER JOIN Slots on Bookings.SlotID = Slots.SlotID)
+                            INNER JOIN Customers on Bookings.CustomerID = Customers.CustomerID)
+                            WHERE Date=(?) """, [fecha_datetime])
                             reporte = cursor.fetchall()
-                            lista_reporte = []
-
-                            for i in reporte:
-                                cursor.execute("SELECT nombre_sala FROM salas WHERE id_sala=(?)", [i[2]])
-                                nombre_sala = cursor.fetchall()
-                                cursor.execute("SELECT nombre_turno FROM turnos WHERE id_turno=(?)", [i[3]])
-                                nombre_turno = cursor.fetchall()
-                                cursor.execute("SELECT name_user FROM users WHERE id_user=(?)", [i[4]])
-                                nombre_cliente = cursor.fetchall()
-
-                                lista_reporte.append(
-                                    [i[0], i[1].strftime('%d/%m/%Y'), nombre_sala[0][0], nombre_turno[0][0],
-                                     nombre_cliente[0][0], i[5]])
+                            lista_reporte = [[booking_id, date.strftime('%d/%m/%Y'), room, slot, user, event_name]
+                                             for booking_id, date, room, slot, user, event_name in reporte]
                     except Error as e:
                         print(e)
 
                     if lista_reporte:
-                        print(tabulate(lista_reporte, headers=["Folio", "Fecha", "Sala", "Turno", "Cliente", "Evento"],
+                        print(tabulate(lista_reporte,
+                                       headers=["Folio", "Fecha", "Sala", "Turno", "Cliente", "Evento"],
                                        tablefmt='psql',
                                        numalign="left"))
                     else:
@@ -708,7 +686,7 @@ Opción: """).lower()
                     with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
                                                                      sqlite3.PARSE_COLNAMES) as conn:
                         cursor = conn.cursor()
-                        cursor.execute("SELECT * FROM reservaciones;")
+                        cursor.execute("SELECT * FROM Bookings;")
                         validacion_reservas = cursor.fetchall()
                 except Error as e:
                     print(e)
@@ -717,33 +695,30 @@ Opción: """).lower()
 
                     while True:
                         try:
-                            fecha_reporte = input("Ingrese la fecha para el reporte (dd/mm/aaaa):\n")
+                            fecha_reporte = input("Ingrese la Date para el reporte (dd/mm/aaaa):\n")
                             fecha_datetime = datetime.datetime.strptime(fecha_reporte, '%d/%m/%Y')
-                            limpiar()
+                            clear()
                             break
                         except ValueError:
-                            limpiar()
-                            print("Ingrese una fecha valida en el formato dd/mm/aaaa.\n")
+                            clear()
+                            print("Ingrese una Date valida en el formato dd/mm/aaaa.\n")
                             continue
 
                     try:
                         with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES |
                                                                          sqlite3.PARSE_COLNAMES) as conn:
                             cursor = conn.cursor()
-                            cursor.execute("SELECT * FROM reservaciones WHERE fecha=(?)", [fecha_datetime])
+                            cursor.execute("""
+SELECT Bookings.BookingID, Bookings.Date, Rooms.Room_name, 
+Slots.Slot_name, Customers.Customer_Name, Bookings.Event_name 
+FROM (((Bookings 
+INNER JOIN Rooms on Bookings.RoomID = Rooms.RoomID)
+INNER JOIN Slots on Bookings.SlotID = Slots.SlotID)
+INNER JOIN Customers on Bookings.CustomerID = Customers.CustomerID)
+WHERE Date=(?) """, [fecha_datetime])
                             reporte = cursor.fetchall()
-                            lista_reporte = []
-
-                            for i in reporte:
-                                cursor.execute("SELECT nombre_sala FROM salas WHERE id_sala=(?)", [i[2]])
-                                nombre_sala = cursor.fetchall()
-                                cursor.execute("SELECT nombre_turno FROM turnos WHERE id_turno = (?)", (i[3],))
-                                nombre_turno = cursor.fetchall()
-                                cursor.execute("SELECT name_user FROM users WHERE id_user=(?)", [i[4]])
-                                nombre_cliente = cursor.fetchall()
-                                lista_reporte.append(
-                                    [i[0], i[1].strftime('%d/%m/%Y'), nombre_sala[0][0], nombre_turno[0][0],
-                                     nombre_cliente[0][0], i[5]])
+                            lista_reporte = [[booking_id, date.strftime('%d/%m/%Y'), room, slot, user, event_name]
+                                             for booking_id, date, room, slot, user, event_name in reporte]
 
                     except Error as e:
                         print(e)
@@ -759,7 +734,7 @@ Opción: """).lower()
                         print(f"Se exporto el reporte como reporte-{fecha_reporte.replace('/', '-')}.xlsx\n")
 
                     else:
-                        print("No hay reservas para esa fecha.\n")
+                        print("No hay reservas para esa Date.\n")
 
                 else:
                     print("No hay reservas registradas.\n")
@@ -768,7 +743,7 @@ Opción: """).lower()
                 break
 
             else:
-                limpiar()
+                clear()
                 print("Opción invalida, ingrese una opción del menú.\n")
                 continue
 
@@ -776,55 +751,51 @@ Opción: """).lower()
 
         while True:
 
-            nombre_sala = input("Ingrese el nombre de la sala:\n")
+            room_name = input("Ingrese el nombre de la RoomID:\n")
 
-            limpiar()
-            if nombre_sala == "":
-                limpiar()
+            clear()
+            if room_name == "" or room_name.isspace():
+                clear()
                 print("El nombre no puede quedar vació.\n")
                 continue
 
             else:
-                limpiar()
+                clear()
                 break
 
         while True:
 
             try:
-                cupo_sala = int(input("Ingrese la capacidad de la sala:\n"))
-                limpiar()
-                if cupo_sala > 0:
+                room_cap = int(input("Ingrese la capacidad de la sala:\n"))
+                clear()
+                if room_cap > 0:
                     break
                 else:
-                    limpiar()
+                    clear()
                     print("La capacidad de la sala debe ser mayor a 0.\n")
                     continue
 
             except ValueError:
-                limpiar()
+                clear()
                 print("Ingrese un numero entero.")
 
         with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) as conn:
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO salas(nombre_sala,capacidad_sala) VALUES(?,?);", (nombre_sala, cupo_sala))
-            try:
-                cursor.execute("SELECT max(id_sala) FROM salas")
-                max_id = cursor.fetchall()
-                id_sala = max_id[0][0]
-            except Error as e:
-                id_sala = 1
+            cursor.execute("INSERT INTO Rooms(Room_name,RoomCap) VALUES(?,?);", (room_name, room_cap))
+            cursor.execute("SELECT last_insert_rowid()")
+            room_id = cursor.fetchone()[0]
 
-        print(f"\nLa sala '{nombre_sala}' fue registrada con clave '{id_sala}'.\n")
+        print(f"\nLa sala \"{room_name}\" fue registrada con clave \"{room_id}\".\n")
 
     elif opcion == "d":
 
         while True:
 
-            nombre_user = input("Ingrese el nombre del usuario:\n")
+            customer_name = input("Ingrese el nombre del usuario:\n")
 
-            limpiar()
-            if nombre_user == "":
-                limpiar()
+            clear()
+            if customer_name == "" or customer_name.isspace():
+                clear()
                 print("El nombre no puede quedar vació.\n")
                 continue
 
@@ -833,21 +804,17 @@ Opción: """).lower()
                 with sqlite3.connect("reservas.db", detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES) \
                         as conn:
                     cursor = conn.cursor()
-                    cursor.execute("INSERT INTO users(name_user) VALUES(?);", [nombre_user])
-                    try:
-                        cursor.execute("SELECT max(id_user) FROM users")
-                        max_id = cursor.fetchall()
-                        id_user = max_id[0][0]
-                    except Error as e:
-                        id_user = 1
+                    cursor.execute("INSERT INTO Customers(Customer_Name) VALUES(?);", [customer_name])
+                    cursor.execute("SELECT last_insert_rowid()")
+                    customer_id = cursor.fetchone()[0]
 
-                print(f"\nEl usuario '{nombre_user}' fue registrado con la clave '{id_user}'.\n")
+                print(f"\nEl usuario '{customer_name}' fue registrado con la clave '{customer_id}'.\n")
                 break
 
     elif opcion == "e":
-        limpiar()
+        clear()
         break
 
     else:
-        limpiar()
+        clear()
         print("Opción no valida.\n")
